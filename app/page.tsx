@@ -960,6 +960,38 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* ==========================================
+                    AI RECOMMENDATIONS & EXCAVATOR SHIFTING
+                   ========================================== */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-[#1e1e1e] text-white rounded-[28px] p-7 flex flex-col justify-between shadow-xl android-card-transition relative overflow-hidden">
+                    <div className="absolute -left-8 -top-8 w-40 h-40 bg-[#af2024]/20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div>
+                      <div className="flex items-center gap-2 font-bold text-[12px] uppercase tracking-widest opacity-70 mb-2">
+                        <span>🤖</span> AI Recommendation (Next Best Action)
+                      </div>
+                      <h3 className="text-[19px] font-bold">Approve Pending JMR Sign-off for NH-66</h3>
+                      <p className="text-[14px] opacity-85 font-normal mt-1.5 leading-relaxed">Accelerates billing cycle by 5 days and unlocks <b>₹22 Cr</b> unbilled cash flow.</p>
+                    </div>
+                    <button onClick={() => triggerToast("JMR approval fast-tracked!")} className="mt-5 px-5 py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl text-[13.5px] font-semibold cursor-pointer w-fit transition shadow-lg shadow-[#af2024]/20">
+                      Execute Fast-Track Approval →
+                    </button>
+                  </div>
+
+                  <div className="bg-white border border-gray-200/80 rounded-[28px] p-7 flex flex-col justify-between shadow-sm android-card-transition">
+                    <div>
+                      <div className="flex items-center gap-2 font-bold text-[12px] text-[#af2024] uppercase tracking-widest mb-2">
+                        <span>🚜</span> AI Business Action (Idle Equipment Shift)
+                      </div>
+                      <h3 className="text-[18px] font-bold text-gray-900">Shift <b>3 Idle Excavators</b> from NH-66 Yard to Expressway Sec IV</h3>
+                      <p className="text-[13.5px] text-gray-500 font-normal mt-1.5 leading-relaxed">IoT telemetry indicates units idle for <b>6 consecutive days</b> while Expressway piling needs support.</p>
+                    </div>
+                    <button onClick={() => triggerToast("Excavator shift order approved & dispatched!")} className="mt-5 px-5 py-3 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-2xl text-[13.5px] font-semibold cursor-pointer w-fit transition shadow-md">
+                      Approve & Execute Shift Order →
+                    </button>
+                  </div>
+                </div>
+
+                {/* ==========================================
                     3. DEPARTMENTAL PENDING APPROVALS SECTION
                    ========================================== */}
                 <div className="bg-white border border-gray-200/80 rounded-[28px] p-7 shadow-sm android-card-transition">
@@ -990,7 +1022,6 @@ export default function DirectorDashboard() {
                           <div className="font-bold text-gray-900 text-[15px] mt-1 leading-snug">{app.title}</div>
                         </div>
 
-                        {/* Buttons hidden until mouseover, compact size, thumbs-up icon for approve */}
                         <div className="hover-actions flex items-center gap-2 mt-5 pt-3 border-t border-gray-200/60">
                           <button 
                             onClick={() => triggerToast(`Approved ${app.title} for ${app.dept}!`)}
