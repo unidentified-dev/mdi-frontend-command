@@ -21,6 +21,7 @@ export default function DirectorDashboard() {
   const [voiceQuery, setVoiceQuery] = useState('');
   const [activeTab, setActiveTab] = useState('command');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [siteSlideIndex, setSiteSlideIndex] = useState(0);
   const [telegramAlertSent, setTelegramAlertSent] = useState(false);
@@ -543,18 +544,40 @@ export default function DirectorDashboard() {
         </div>
       )}
 
-      {/* Collapsible Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-[80px]' : 'w-[280px]'} bg-white border-r border-gray-200/70 flex flex-col justify-between p-4 shrink-0 transition-all duration-300 shadow-sm`}>
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isMobileMenuOpen && (
+        <div 
+          onClick={() => setIsMobileMenuOpen(false)} 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-xs transition-opacity"
+        />
+      )}
+
+      {/* Responsive Collapsible Sidebar */}
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-50 bg-white border-r border-gray-200/70 flex flex-col justify-between p-4 shrink-0 transition-all duration-300 shadow-sm
+        ${isSidebarCollapsed ? 'md:w-[80px]' : 'md:w-[280px]'}
+        ${isMobileMenuOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
         <div>
           <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-            {!isSidebarCollapsed && (
+            {(!isSidebarCollapsed || isMobileMenuOpen) && (
               <div className="flex items-center gap-2.5 overflow-hidden android-slide-enter">
                 <img src="/logo.png" alt="MD Infra Logo" className="w-52 h-auto object-contain rounded" />
               </div>
             )}
+
+            {/* Mobile Close Button */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="md:hidden w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 font-bold"
+            >
+              ✕
+            </button>
           </div>
 
-          {!isSidebarCollapsed && <div className="text-[11px] text-gray-400 mt-4 mb-2 font-bold uppercase tracking-wider px-2">Workspace Modules</div>}
+          {(!isSidebarCollapsed || isMobileMenuOpen) && (
+            <div className="text-[11px] text-gray-400 mt-4 mb-2 font-bold uppercase tracking-wider px-2">Workspace Modules</div>
+          )}
           
           <ul className="flex flex-col gap-1.5 mt-2 overflow-y-auto max-h-[calc(100vh-180px)] pr-1">
             {menuItems.map((item) => (
@@ -563,19 +586,20 @@ export default function DirectorDashboard() {
                 onClick={() => {
                   setActiveTab(item.id);
                   setSelectedSite(null);
+                  setIsMobileMenuOpen(false);
                   triggerToast(`Navigated to ${item.name} Module`);
                 }}
                 className={`flex items-center gap-3.5 p-3 rounded-2xl text-[14px] font-semibold cursor-pointer transition-all ${activeTab === item.id && !selectedSite ? 'bg-[#af2024] text-white shadow-lg shadow-[#af2024]/20 scale-[1.02]' : 'bg-transparent text-gray-600 hover:bg-gray-50 hover:text-[#af2024]'}`}
-                title={isSidebarCollapsed ? item.name : ''}
+                title={isSidebarCollapsed && !isMobileMenuOpen ? item.name : ''}
               >
                 <span className="text-[17px] shrink-0 font-light opacity-90">{item.icon}</span>
-                {!isSidebarCollapsed && <span className="truncate">{item.name}</span>}
+                {(!isSidebarCollapsed || isMobileMenuOpen) && <span className="truncate">{item.name}</span>}
               </li>
             ))}
           </ul>
         </div>
 
-        {!isSidebarCollapsed && (
+        {(!isSidebarCollapsed || isMobileMenuOpen) && (
           <div className="text-[12px] text-gray-400 border-t border-gray-100 pt-3.5 font-medium px-2">
             MDI Private Limited • Kolhapur HQ
           </div>
@@ -583,10 +607,18 @@ export default function DirectorDashboard() {
       </aside>
 
       {/* Main Area */}
-      <main className="flex-1 flex flex-col overflow-y-auto relative">
-        {/* Marquee Tenders News */}
-        <div className="bg-[#af2024] text-white text-[13px] font-semibold py-3 px-6 flex items-center overflow-hidden shrink-0 shadow-md">
-          <span className="bg-white/15 text-white font-semibold px-3 py-1 rounded-full text-[11px] mr-4 shrink-0 border border-white/20 flex items-center gap-1.5 shadow-sm">
+      <main className="flex-1 flex flex-col overflow-y-auto relative w-full">
+        {/* Marquee Tenders News with Sidebar Toggle Button positioned to the left of it, styled identically */}
+        <div className="bg-[#af2024] text-white text-[13px] font-semibold py-3 px-6 flex items-center overflow-hidden shrink-0 shadow-md gap-4">
+          <button 
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="hidden md:flex bg-white/15 text-white font-semibold px-3.5 py-1.5 rounded-full text-[11px] shrink-0 border border-white/25 items-center gap-1.5 shadow-sm cursor-pointer hover:bg-white/25 transition"
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            <span>{isSidebarCollapsed ? '📂 Open Menu' : '📁 Collapse Menu'}</span>
+          </button>
+
+          <span className="bg-white/15 text-white font-semibold px-3 py-1 rounded-full text-[11px] shrink-0 border border-white/20 hidden sm:flex items-center gap-1.5 shadow-sm">
             {IconOutlined.clipboard} GOV TENDERS TICKER
           </span>
           <div className="w-full overflow-hidden whitespace-nowrap">
@@ -601,24 +633,35 @@ export default function DirectorDashboard() {
           </div>
         </div>
 
-        <header className="bg-white/80 backdrop-blur-md px-8 py-4 border-b border-gray-200/70 flex justify-between items-center sticky top-0 z-10 shadow-xs">
-          <div>
-            <h2 className="text-[22px] font-bold tracking-tight text-[#1e1e1e]">Sushant's Command Centre</h2>
-            <p className="text-[13px] text-gray-400 font-normal mt-0.5">Live Interactive Enterprise ERP Environment</p>
+        <header className="bg-white/80 backdrop-blur-md px-4 sm:px-8 py-4 border-b border-gray-200/70 flex justify-between items-center sticky top-0 z-10 shadow-xs gap-3">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger Toggle */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden p-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 transition"
+              title="Open Menu"
+            >
+              ☰
+            </button>
+            <div>
+              <h2 className="text-[18px] sm:text-[22px] font-bold tracking-tight text-[#1e1e1e]">Sushant's Command Centre</h2>
+              <p className="text-[12px] sm:text-[13px] text-gray-400 font-normal mt-0.5 hidden sm:block">Live Interactive Enterprise ERP Environment</p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center bg-gray-50 border border-gray-200/80 rounded-2xl px-3.5 py-2 w-72 gap-2.5 transition focus-within:ring-2 focus-within:ring-[#af2024]/20 focus-within:bg-white">
+
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden lg:flex items-center bg-gray-50 border border-gray-200/80 rounded-2xl px-3.5 py-2 w-64 xl:w-72 gap-2.5 transition focus-within:ring-2 focus-within:ring-[#af2024]/20 focus-within:bg-white">
               <input 
                 type="text" 
                 value={voiceQuery}
                 onChange={(e) => setVoiceQuery(e.target.value)}
-                placeholder={isListening ? "Listening to voice command..." : "Dispatch command / search site..."}
+                placeholder={isListening ? "Listening..." : "Dispatch command..."}
                 className="border-none bg-transparent outline-none text-[13.5px] font-normal w-full text-gray-800 placeholder-gray-400"
               />
               <button 
                 onClick={() => setShowVoiceModal(true)}
                 className="w-8 h-8 rounded-full border-none flex items-center justify-center text-white bg-[#1e1e1e] cursor-pointer transition shrink-0 hover:bg-[#af2024] shadow-sm"
-                title="Click to speak (Voice-to-Text)"
+                title="Voice-to-Text"
               >
                 {IconOutlined.mic}
               </button>
@@ -628,14 +671,15 @@ export default function DirectorDashboard() {
             <div 
               title="4 Pending Office Tasks" 
               onClick={() => triggerToast("Opening Office Task Management Queue...")} 
-              className="relative bg-gray-50 border border-gray-200/80 px-4 py-2.5 rounded-2xl cursor-pointer hover:bg-gray-100 text-gray-700 font-semibold text-[13px] transition flex items-center gap-2"
+              className="relative bg-gray-50 border border-gray-200/80 px-3.5 sm:px-4 py-2.5 rounded-2xl cursor-pointer hover:bg-gray-100 text-gray-700 font-semibold text-[13px] transition flex items-center gap-2 shadow-xs"
             >
-              <span>📋 Pending Tasks</span>
+              <span className="hidden sm:inline">📋 Pending Tasks</span>
+              <span className="sm:hidden">📋</span>
               <span className="w-5 h-5 bg-[#af2024] text-white rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm">4</span>
             </div>
 
-            {/* Notification Icon with Rotating Red Bold Asterisk Badge */}
-            <div onClick={() => triggerToast("Opened Notification Center")} className="relative bg-gray-50 border border-gray-200/80 p-3 rounded-2xl cursor-pointer hover:bg-[#fce8e6] hover:border-[#af2024]/30 text-gray-700 transition">
+            {/* Notification Icon */}
+            <div onClick={() => triggerToast("Opened Notification Center")} className="relative bg-gray-50 border border-gray-200/80 p-2.5 sm:p-3 rounded-2xl cursor-pointer hover:bg-[#fce8e6] hover:border-[#af2024]/30 text-gray-700 transition">
               {IconOutlined.bell}
               <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center shadow-md animate-spin-badge">
                 <span className="font-extrabold text-[12px] leading-none">✱</span>
@@ -643,8 +687,8 @@ export default function DirectorDashboard() {
             </div>
 
             <div onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-3 cursor-pointer p-1.5 rounded-2xl hover:bg-gray-50 transition border border-transparent hover:border-gray-200">
-              <div className="w-10 h-10 rounded-full bg-[#af2024] text-white flex items-center justify-center font-bold text-[14px] shadow-md shadow-[#af2024]/20">SU</div>
-              <div>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#af2024] text-white flex items-center justify-center font-bold text-[14px] shadow-md shadow-[#af2024]/20">SU</div>
+              <div className="hidden md:block">
                 <div className="text-[14px] font-bold text-gray-900 leading-tight">Sushant</div>
                 <div className="text-[11.5px] text-gray-400 font-medium">Director Level 1</div>
               </div>
@@ -652,24 +696,24 @@ export default function DirectorDashboard() {
           </div>
         </header>
 
-        <div className="p-8 flex flex-col gap-6 android-slide-enter">
+        <div className="p-4 sm:p-8 flex flex-col gap-6 android-slide-enter">
           {/* ==========================================
               DEDICATED FULL-PAGE SITE INSPECTION VIEW
              ========================================== */}
           {selectedSite ? (
             <div className="flex flex-col gap-6 android-slide-enter">
-              <div className="flex justify-between items-center bg-white border border-gray-200/80 rounded-[24px] p-5 shadow-sm">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white border border-gray-200/80 rounded-[24px] p-5 shadow-sm gap-4">
                 <button 
                   onClick={() => setSelectedSite(null)}
                   className="px-4.5 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-2xl font-semibold text-[13.5px] text-gray-700 cursor-pointer transition shadow-xs"
                 >
                   ← Back to Command Centre
                 </button>
-                <div className="text-right">
+                <div className="text-left md:text-right">
                   <h2 className="text-[19px] font-bold text-gray-900">{selectedSite.name}</h2>
                   <p className="text-[12px] text-gray-400 font-medium">{selectedSite.type} • {selectedSite.location}</p>
                 </div>
-                <div className="flex gap-2.5">
+                <div className="flex flex-wrap gap-2.5">
                   <button 
                     onClick={() => handleScheduleMeeting(selectedSite.name)}
                     className="px-4.5 py-2.5 glass-button text-[#1e1e1e] rounded-2xl text-[13.5px] font-bold cursor-pointer transition shadow-sm hover:border-[#af2024]/40 flex items-center gap-2 border border-sky-200/60 bg-sky-50/50"
@@ -692,7 +736,7 @@ export default function DirectorDashboard() {
               </div>
 
               {/* Financial Cards */}
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white border border-gray-200/80 rounded-[24px] p-6 shadow-sm android-card-transition">
                   <span className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Project Cost</span>
                   <div className="text-[36px] font-extrabold text-[#af2024] mt-1.5"><b>{selectedSite.budget}</b></div>
@@ -741,7 +785,7 @@ export default function DirectorDashboard() {
               {/* BOQ Comparison */}
               <div className="bg-white border border-gray-200/80 rounded-[24px] p-6 shadow-sm android-card-transition">
                 <h4 className="font-bold text-[16px] text-gray-900 mb-5">On-Site Assets vs Proposed BOQ</h4>
-                <div className="grid grid-cols-5 gap-5 text-center">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
                   <div className="p-5 bg-gray-50 border border-gray-100 rounded-2xl">
                     <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">{IconOutlined.truck} Trucks</div>
                     <div className="text-[20px] font-bold text-gray-900 mt-2"><b>{selectedSite.boq.trucks.actual}</b> <span className="text-[12.5px] text-gray-400 font-medium">/ {selectedSite.boq.trucks.proposed}</span></div>
@@ -758,7 +802,7 @@ export default function DirectorDashboard() {
                     <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">{IconOutlined.box} Machinery</div>
                     <div className="text-[20px] font-bold text-gray-900 mt-2"><b>{selectedSite.boq.machinery.actual}</b> <span className="text-[12.5px] text-gray-400 font-medium">/ {selectedSite.boq.machinery.proposed}</span></div>
                   </div>
-                  <div className="p-5 bg-gray-50 border border-gray-100 rounded-2xl">
+                  <div className="p-5 bg-gray-50 border border-gray-100 rounded-2xl md:col-span-1 col-span-2">
                     <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">{IconOutlined.worker} Workforce</div>
                     <div className="text-[20px] font-bold text-[#137333] mt-2"><b>{selectedSite.boq.workforce.actual}</b> <span className="text-[12.5px] text-gray-400 font-medium">/ {selectedSite.boq.workforce.proposed}</span></div>
                   </div>
@@ -766,7 +810,7 @@ export default function DirectorDashboard() {
               </div>
 
               {/* Map & CCTV / Work Orders & Timeline */}
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-200/80 rounded-[24px] p-6 shadow-sm flex flex-col justify-between android-card-transition">
                   <div>
                     <h4 className="font-bold text-[16px] text-gray-900 mb-4 flex items-center gap-2">
@@ -824,7 +868,7 @@ export default function DirectorDashboard() {
               {/* Emergency Contacts */}
               <div className="bg-[#fef2f2] border border-[#af2024]/20 rounded-[24px] p-6 shadow-xs">
                 <h4 className="font-bold text-[16px] text-[#af2024] mb-5">Emergency Message & Direct Contact System</h4>
-                <div className="grid grid-cols-5 gap-4 text-[13.5px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 text-[13.5px]">
                   {Object.entries(selectedSite.contacts).map(([role, contact]: [string, any], idx) => (
                     <div key={idx} className="p-5 bg-white border border-red-100 rounded-2xl flex flex-col justify-between shadow-xs android-card-transition">
                       <div>
@@ -849,17 +893,17 @@ export default function DirectorDashboard() {
             activeTab === 'command' && (
               <div className="flex flex-col gap-6 android-slide-enter">
                 {/* Message at top & Weather today with Rain Animation */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-br from-[#1e1e1e] to-gray-900 text-white rounded-[28px] p-7 flex flex-col justify-between shadow-xl android-card-transition relative overflow-hidden">
                     <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-[#af2024]/20 rounded-full blur-3xl pointer-events-none"></div>
                     <div>
                       <div className="text-[12px] font-bold opacity-60 uppercase tracking-widest">Executive Morning Briefing</div>
-                      <h1 className="text-[30px] font-bold mt-1.5 tracking-tight">Hello, good morning, Sushant.</h1>
+                      <h1 className="text-[26px] sm:text-[30px] font-bold mt-1.5 tracking-tight">Hello, good morning, Sushant.</h1>
                       <p className="text-[14px] opacity-85 font-normal mt-2 leading-relaxed">All 4 strategic sites are fully mobilized. Operations running at <b>94.6%</b> operational efficiency.</p>
                     </div>
-                    <div className="mt-6 pt-5 border-t border-white/15 flex justify-between items-center text-[13px] font-medium opacity-90">
+                    <div className="mt-6 pt-5 border-t border-white/15 flex flex-col sm:flex-row justify-between items-start sm:items-center text-[13px] font-medium opacity-90 gap-2">
                       <span>📍 Kolhapur Site Headquarters</span>
-                      <span>🕒 Thursday, Aug 27, 2026 • 12:52 PM</span>
+                      <span>🕒 Aug 27, 2026 • 12:52 PM</span>
                     </div>
                   </div>
 
@@ -883,23 +927,23 @@ export default function DirectorDashboard() {
                     <div className="flex justify-between items-start relative z-10">
                       <div>
                         <div className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Weather Intelligence • Kolhapur</div>
-                        <div className="text-[23px] font-bold text-gray-900 mt-1.5"><b>29°C</b> · Heavy Rain Forecast Expected at <b>4:30 PM</b></div>
+                        <div className="text-[20px] sm:text-[23px] font-bold text-gray-900 mt-1.5"><b>29°C</b> · Heavy Rain Forecast Expected at <b>4:30 PM</b></div>
                       </div>
                       <div className="text-[36px] bg-sky-50 p-3 rounded-2xl shadow-inner relative">
                         🌧️
                       </div>
                     </div>
 
-                    <div className="bg-[#fef7e0] border border-[#f59e0b]/30 p-4 rounded-2xl flex items-center justify-between mt-4 shadow-xs relative z-10">
+                    <div className="bg-[#fef7e0] border border-[#f59e0b]/30 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3 shadow-xs relative z-10">
                       <span className="text-[13px] font-semibold text-[#b06000] leading-snug">⚠️ Rain Alert: Protect open sub-base layers & machinery immediately.</span>
                       <button 
                         onClick={() => {
                           setTelegramAlertSent(true);
                           triggerToast("Telegram alert successfully dispatched to Driver & PA!");
                         }}
-                        className="px-4 py-2.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-md shadow-[#af2024]/20 shrink-0 ml-3"
+                        className="px-4 py-2.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-md shadow-[#af2024]/20 shrink-0 w-full sm:w-auto text-center"
                       >
-                        {telegramAlertSent ? "✓ Alert Sent!" : "Make Arrangements (Telegram)"}
+                        {telegramAlertSent ? "✓ Alert Sent!" : "Make Arrangements"}
                       </button>
                     </div>
                   </div>
@@ -907,25 +951,25 @@ export default function DirectorDashboard() {
 
                 {/* Top three sites sliding with Original Rich Tone, Narrower Green & White Gradient Border, Glass Pie Chart */}
                 <div className="bg-white border border-gray-200/80 rounded-[28px] p-7 shadow-sm android-card-transition">
-                  <div className="flex justify-between items-center mb-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                      <div className="text-[17px] font-bold text-gray-900 flex items-center gap-2">
+                      <div className="text-[16px] sm:text-[17px] font-bold text-gray-900 flex items-center gap-2">
                         <span className="text-[#af2024]">{IconOutlined.mapPin}</span> Top Strategic Project Sites — Sliding Telemetry & Financial Breakdown
                       </div>
                       <p className="text-[13px] text-gray-400 font-medium mt-0.5">Showing site {siteSlideIndex + 1} of {allSites.length} (Works complete, cost, billed, unbilled, P&L)</p>
                     </div>
-                    <div className="flex gap-2.5">
+                    <div className="flex gap-2.5 self-end sm:self-auto">
                       <button 
                         onClick={() => setSiteSlideIndex(prev => (prev > 0 ? prev - 1 : allSites.length - 1))}
                         className="px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-2xl font-semibold text-[13.5px] cursor-pointer transition shadow-xs"
                       >
-                        ← Prev Site
+                        ← Prev
                       </button>
                       <button 
                         onClick={() => setSiteSlideIndex(prev => (prev < allSites.length - 1 ? prev + 1 : 0))}
                         className="px-4 py-2 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-semibold text-[13.5px] cursor-pointer transition shadow-md shadow-[#af2024]/20"
                       >
-                        Next Site →
+                        Next →
                       </button>
                     </div>
                   </div>
@@ -941,10 +985,10 @@ export default function DirectorDashboard() {
                     
                     return (
                       <div className={`rounded-[26px] shadow-md ${borderClass}`}>
-                        <div className="bg-white rounded-[25px] p-7 grid grid-cols-3 gap-7 android-slide-enter">
-                          <div className="col-span-2 flex flex-col justify-between">
+                        <div className="bg-white rounded-[25px] p-5 sm:p-7 grid grid-cols-1 lg:grid-cols-3 gap-7 android-slide-enter">
+                          <div className="lg:col-span-2 flex flex-col justify-between">
                             <div>
-                              <div className="flex justify-between items-start border-b border-gray-200/60 pb-4 mb-5">
+                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200/60 pb-4 mb-5 gap-2">
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <h3 className="text-[19px] font-bold text-gray-900">{site.name}</h3>
@@ -967,7 +1011,7 @@ export default function DirectorDashboard() {
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-3.5 text-[14px]">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-[14px]">
                                 <div className="p-3.5 bg-gray-50/80 border border-gray-200/80 rounded-2xl flex justify-between shadow-xs"><span className="text-gray-500 font-medium">Total Project Cost</span><span className="font-bold text-gray-900"><b>{site.budget}</b></span></div>
                                 <div className="p-3.5 bg-gray-50/80 border border-gray-200/80 rounded-2xl flex justify-between shadow-xs"><span className="text-gray-500 font-medium">Total Work Done</span><span className="font-bold text-[#137333]"><b>{site.done}</b></span></div>
                                 <div className="p-3.5 bg-gray-50/80 border border-gray-200/80 rounded-2xl flex justify-between shadow-xs"><span className="text-gray-500 font-medium">Billed Amount</span><span className="font-bold text-gray-900"><b>{site.billed}</b></span></div>
@@ -975,9 +1019,9 @@ export default function DirectorDashboard() {
                               </div>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-gray-200/60 flex justify-between items-center gap-3">
+                            <div className="mt-6 pt-4 border-t border-gray-200/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                               <span className="text-[13.5px] font-semibold text-[#137333]">P&L: <b>{site.profit}</b></span>
-                              <div className="flex gap-2.5">
+                              <div className="flex flex-wrap gap-2">
                                 <button 
                                   onClick={() => handleScheduleMeeting(site.name)} 
                                   className="px-3.5 py-2.5 glass-button text-gray-900 rounded-2xl text-[12px] font-bold cursor-pointer transition shadow-xs hover:border-sky-400 bg-white/90 border border-sky-200 flex items-center gap-1.5"
@@ -1026,7 +1070,7 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* Daily diesel consumption, workforce performance, onsite attendance, fleet in work */}
-                <div className="grid grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   <div className="bg-white border border-gray-200/80 rounded-[24px] p-6 shadow-sm android-card-transition">
                     <span className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="text-[#af2024]">{IconOutlined.fuel}</span> Daily Diesel Consumption
@@ -1058,7 +1102,7 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* AI Recommendation & Excavator Shifting */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-[#1e1e1e] text-white rounded-[28px] p-7 flex flex-col justify-between shadow-xl android-card-transition relative overflow-hidden">
                     <div className="absolute -left-8 -top-8 w-40 h-40 bg-[#af2024]/20 rounded-full blur-3xl pointer-events-none"></div>
                     <div>
@@ -1089,11 +1133,11 @@ export default function DirectorDashboard() {
 
                 {/* Notification Centre */}
                 <div className="bg-white border border-gray-200/80 rounded-[28px] p-7 shadow-sm android-card-transition">
-                  <div className="flex justify-between items-center mb-5">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
                     <h3 className="text-[17px] font-bold text-gray-900 flex items-center gap-2.5">
                       <span className="text-[#af2024]">{IconOutlined.bell}</span> Critical Notification Centre
                     </h3>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {[
                         { id: 'right-away', label: 'Take Action Right Away (2)' },
                         { id: 'upcoming', label: 'Upcoming Actions (1)' },
@@ -1113,12 +1157,12 @@ export default function DirectorDashboard() {
                   <div className="flex flex-col gap-3">
                     {activeNotificationTab === 'right-away' && (
                       notifications['right-away'].map(item => (
-                        <div key={item.id} className="p-4 bg-[#fef7e0] border border-[#f59e0b]/30 rounded-2xl flex justify-between items-center shadow-xs android-card-transition">
+                        <div key={item.id} className="p-4 bg-[#fef7e0] border border-[#f59e0b]/30 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs android-card-transition">
                           <span className="text-[14px] font-semibold text-[#b06000]">{item.text}</span>
                           <button onClick={() => {
                             setNotifications(prev => ({ ...prev, 'right-away': prev['right-away'].filter(n => n.id !== item.id) }));
                             triggerToast("Action completed successfully!");
-                          }} className="px-4 py-2 bg-[#b06000] hover:bg-[#965200] text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">
+                          }} className="px-4 py-2 bg-[#b06000] hover:bg-[#965200] text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">
                             {item.status === 'Resolved' ? 'Done' : 'Sign & Release'}
                           </button>
                         </div>
@@ -1130,23 +1174,23 @@ export default function DirectorDashboard() {
                       </div>
                     )}
                     {activeNotificationTab === 'overdue' && (
-                      <div className="p-4 bg-[#fef2f2] border border-[#af2024]/20 rounded-2xl flex justify-between items-center shadow-xs">
+                      <div className="p-4 bg-[#fef2f2] border border-[#af2024]/20 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs">
                         <span className="text-[14px] font-semibold text-[#af2024]">❌ Subcontractor safety gear compliance report pending from SH-12 Site Manager</span>
-                        <button onClick={() => triggerToast("Reminder sent to Site Manager!")} className="px-4 py-2 bg-[#af2024] hover:bg-[#92191d] text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">Send Reminder</button>
+                        <button onClick={() => triggerToast("Reminder sent to Site Manager!")} className="px-4 py-2 bg-[#af2024] hover:bg-[#92191d] text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">Send Reminder</button>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Approvals & Escalations */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white border border-gray-200/80 rounded-[28px] p-7 shadow-sm android-card-transition">
                     <h3 className="text-[17px] font-bold text-gray-900 mb-4 flex items-center gap-2.5">
                       <span className="text-[#af2024]">{IconOutlined.card}</span> Pending Approvals, Payments & Documents
                     </h3>
                     <div className="flex flex-col gap-3 text-[14px]">
                       {approvals.map(app => (
-                        <div key={app.id} className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl flex justify-between items-center shadow-xs">
+                        <div key={app.id} className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs">
                           <div>
                             <div className="font-bold text-gray-900">{app.title}</div>
                             <div className="text-[12.5px] text-gray-500 font-medium mt-0.5">Amount: <b>{app.amount}</b> • Status: <span className="text-[#b06000] font-bold">{app.status}</span></div>
@@ -1154,7 +1198,7 @@ export default function DirectorDashboard() {
                           <button onClick={() => {
                             setApprovals([]);
                             triggerToast(`Payment of ${app.amount} released successfully!`);
-                          }} className="px-4 py-2 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">Release Payment</button>
+                          }} className="px-4 py-2 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">Release Payment</button>
                         </div>
                       ))}
                       {approvals.length === 0 && (
@@ -1176,19 +1220,19 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* Calendar, Trip Planner & Material Schedule */}
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div onClick={() => setShowCalendarModal(true)} className="bg-white border border-gray-200/80 rounded-[28px] p-6 shadow-sm android-card-transition cursor-pointer hover:border-[#af2024]/50">
                     <h3 className="text-[16px] font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <span className="text-[#af2024]">{IconOutlined.calendar}</span> Executive Calendar (Click to open)
+                      <span className="text-[#af2024]">{IconOutlined.calendar}</span> Executive Calendar (Click)
                     </h3>
                     <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl text-[13.5px] shadow-xs">
-                      <div className="font-bold text-[#af2024] mb-1.5">Today: August 27, 2026 (Highlighted)</div>
+                      <div className="font-bold text-[#af2024] mb-1.5">Today: August 27, 2026</div>
                       <ul className="text-gray-600 font-medium flex flex-col gap-1.5">
                         <li>• 11:00 AM - Board Meeting</li>
-                        <li>• 03:30 PM - SH-12 Site Inspection</li>
+                        <li>• 03:30 PM - SH-12 Inspection</li>
                         <li>• 06:00 PM - Tendering Review</li>
                       </ul>
-                      <span className="text-[12px] text-[#af2024] font-bold mt-3 block">Click to view full schedule popup →</span>
+                      <span className="text-[12px] text-[#af2024] font-bold mt-3 block">Click to view schedule popup →</span>
                     </div>
                   </div>
 
@@ -1198,7 +1242,7 @@ export default function DirectorDashboard() {
                     </h3>
                     <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl text-[13.5px] font-normal shadow-xs">
                       <div className="font-bold text-gray-900 mb-1">HQ Kolhapur → NH-66 Site 2</div>
-                      <div className="text-[#137333] font-semibold mb-3">AI Optimized Route: Via NH48 Bypass (<b>42 mins</b>)</div>
+                      <div className="text-[#137333] font-semibold mb-3">AI Route: Via NH48 Bypass (<b>42 mins</b>)</div>
                       <button onClick={() => setShowMapModal(true)} className="w-full py-2.5 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">Start GPS Navigation →</button>
                     </div>
                   </div>
@@ -1220,7 +1264,7 @@ export default function DirectorDashboard() {
                   <h3 className="text-[17px] font-bold text-indigo-900 mb-4 flex items-center gap-2.5">
                     <span>🌟</span> Work Life Balance & Personal Milestones
                   </h3>
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="p-5 bg-white border border-indigo-100 rounded-2xl shadow-xs">
                       <div className="flex justify-between items-center mb-2">
                         <h4 className="font-bold text-gray-900 text-[15px]">Ishotsav 2.0 (Annual Fest)</h4>
@@ -1260,12 +1304,12 @@ export default function DirectorDashboard() {
                   </h3>
                   <p className="text-[13.5px] text-gray-500 mb-4">Capture unstructured strategic thoughts, innovation ideas, or process optimization notes for MDI Private Limited.</p>
                   
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <input 
                       type="text"
                       value={brainstormInput}
                       onChange={(e) => setBrainstormInput(e.target.value)}
-                      placeholder="Type a creative brainstorming thought (e.g., Use drone thermal imaging for asphalt compaction)..."
+                      placeholder="Type a creative brainstorming thought..."
                       className="flex-1 p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-[14px] outline-none focus:bg-white transition"
                     />
                     <button 
@@ -1277,7 +1321,7 @@ export default function DirectorDashboard() {
                           triggerToast("Please type an idea before submitting.");
                         }
                       }}
-                      className="px-6 py-3.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold text-[14px] cursor-pointer transition shadow-md shadow-[#af2024]/20"
+                      className="px-6 py-3.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold text-[14px] cursor-pointer transition shadow-md shadow-[#af2024]/20 shrink-0"
                     >
                       Log Idea 🚀
                     </button>
@@ -1285,7 +1329,7 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* Send Command Section & AI Recommended Meetings */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-white border border-gray-200/80 rounded-[28px] p-7 shadow-sm android-card-transition">
                     <h3 className="text-[17px] font-bold text-gray-900 mb-4 flex items-center gap-2.5">
                       <span className="text-[#af2024]">{IconOutlined.clipboard}</span> Send Command to Person or Team
@@ -1340,19 +1384,19 @@ export default function DirectorDashboard() {
                       <span className="text-[#af2024]">{IconOutlined.calendar}</span> AI Recommended Meetings & Site Visits
                     </h3>
                     <div className="flex flex-col gap-3.5">
-                      <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl flex justify-between items-center text-[14px] shadow-xs">
+                      <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center text-[14px] gap-2 shadow-xs">
                         <div>
                           <div className="font-bold text-gray-900">Site Visit: SH-12 Ring Road Sub-base Inspection</div>
-                          <div className="text-[12.5px] text-gray-500 font-medium mt-0.5">Today @ 3:30 PM • Recommended by AI Telemetry</div>
+                          <div className="text-[12.5px] text-gray-500 font-medium mt-0.5">Today @ 3:30 PM • AI Telemetry Recommendation</div>
                         </div>
-                        <button onClick={() => triggerToast("AI site visit accepted & added to calendar!")} className="px-4 py-2 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">Accept</button>
+                        <button onClick={() => triggerToast("AI site visit accepted & added to calendar!")} className="px-4 py-2 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">Accept</button>
                       </div>
-                      <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl flex justify-between items-center text-[14px] shadow-xs">
+                      <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center text-[14px] gap-2 shadow-xs">
                         <div>
                           <div className="font-bold text-gray-900">Meeting: Vendor Payment Review with CFO</div>
                           <div className="text-[12.5px] text-gray-500 font-medium mt-0.5">Tomorrow @ 10:00 AM • High Priority</div>
                         </div>
-                        <button onClick={() => triggerToast("Meeting scheduled with CFO!")} className="px-4 py-2 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">Schedule</button>
+                        <button onClick={() => triggerToast("Meeting scheduled with CFO!")} className="px-4 py-2 bg-[#1e1e1e] hover:bg-gray-800 text-white rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">Schedule</button>
                       </div>
                     </div>
                   </div>
