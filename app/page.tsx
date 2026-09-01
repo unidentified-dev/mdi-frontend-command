@@ -445,7 +445,7 @@ export default function DirectorDashboard() {
             {menuItems.map((item) => (
               <li 
                 key={item.id}
-                onClick={() => { setActiveTab(item.id); setSelectedSite(null); setIsMobileMenuOpen(false); triggerToast(`Navigated to ${item.name} Module`); }}
+                onClick={() => { setActiveTab(item.id); setSelectedSite(null); setIsMobileMenuOpen(false); triggerToast(`Mapsd to ${item.name} Module`); }}
                 className={`flex items-center gap-3.5 p-3 rounded-2xl text-[14px] font-semibold cursor-pointer transition-all ${activeTab === item.id && !selectedSite ? 'bg-[#af2024] text-white shadow-lg shadow-[#af2024]/20 scale-[1.02]' : isDarkMode ? 'text-gray-300 hover:bg-white/5 hover:text-[#af2024]' : 'text-gray-600 hover:bg-gray-50 hover:text-[#af2024]'}`}
                 title={isSidebarCollapsed && !isMobileMenuOpen ? item.name : ''}
               >
