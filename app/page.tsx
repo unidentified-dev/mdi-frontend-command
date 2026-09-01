@@ -18,7 +18,6 @@ export default function DirectorDashboard() {
     setRainDrops(drops);
   }, []);
 
-  const [isListening, setIsListening] = useState(false);
   const [voiceQuery, setVoiceQuery] = useState('');
   const [activeTab, setActiveTab] = useState('command');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -26,47 +25,80 @@ export default function DirectorDashboard() {
   const [selectedSite, setSelectedSite] = useState<any>(null);
   const [telegramAlertSent, setTelegramAlertSent] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [showBilledDetails, setShowBilledDetails] = useState(false);
+
+  // Interactive states for charts, tabs, and accordions
+  const [consolidatedTab, setConsolidatedTab] = useState<'financial' | 'boq'>('financial');
+  const [openZone, setOpenZone] = useState<string | null>('North Zone');
+  const [openSiteId, setOpenSiteId] = useState<number | null>(null);
+  const [aiPopupSite, setAiPopupSite] = useState<any | null>(null);
   
   // Interactive Modals State
-  const [activeCctv, setActiveCctv] = useState<string | null>(null);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [pieHoverInfo, setPieHoverInfo] = useState<string | null>(null);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [brainstormInput, setBrainstormInput] = useState('');
 
   // Departmental Approvals State
   const [departmentApprovals, setDepartmentApprovals] = useState([
-    { id: 'tendering', dept: 'Tendering', count: 3, title: 'Pune-Nashik Greenfield Bid Bond Release', status: 'Pending' },
-    { id: 'fleet', dept: 'Fleet and Fuel', count: 5, title: 'Bulk Diesel Fuel Purchase Order #412', status: 'Pending' },
-    { id: 'purchase', dept: 'Purchase', count: 2, title: 'VG-30 Bitumen Procurement Contract', status: 'Pending' },
-    { id: 'finance', dept: 'Finance', count: 4, title: 'Larsen Asphalt Eq. Advance Payment', status: 'Pending' },
-    { id: 'accounts', dept: 'Accounts', count: 6, title: 'RA Bill #15 Tax Deductions Audit', status: 'Pending' },
-    { id: 'safety', dept: 'Safety and Compliance', count: 1, title: 'Expressway Sec IV Safety Gear Audit', status: 'Pending' },
-    { id: 'it', dept: 'IT', count: 2, title: 'IoT Gateway Licensing Renewal for CCTV', status: 'Pending' }
-  ]);
-
-  // Dynamic Action States
-  const [activeNotificationTab, setActiveNotificationTab] = useState('right-away');
-  const [notifications, setNotifications] = useState({
-    'right-away': [
-      { id: 1, text: '⚠️ NH-66 JMR Sign-off pending from NHAI Project Director (₹22 Cr value)', status: 'Pending' },
-      { id: 2, text: '✅ Bulk Diesel Order confirmation required for Kolhapur Yard storage tank', status: 'Pending' }
-    ],
-    'upcoming': [
-      { id: 3, text: '• Monthly safety audit scheduled across Expressway Sec IV (Due in 3 days)', status: 'Scheduled' }
-    ],
-    'overdue': [
-      { id: 4, text: '❌ Subcontractor safety gear compliance report pending from SH-12 Site Manager', status: 'Overdue' }
-    ]
-  });
-
-  const [commandRecipient, setCommandRecipient] = useState('Project Manager (NH-66)');
-  const [commandText, setCommandText] = useState('');
-  const [approvals, setApprovals] = useState([
-    { id: 1, title: 'Vendor Payment Release - Larsen Asphalt Eq.', amount: '₹48.5 Lakhs', status: 'Pending' }
+    {
+      id: 'tendering',
+      dept: 'Tendering & Bids',
+      count: 3,
+      items: [
+        { id: 't1', title: 'Pune-Nashik Greenfield Bid Bond Release', sub: 'Urgent Bank Guarantee sign-off' },
+        { id: 't2', title: 'Kolhapur Expressway Pre-qualification Document', sub: 'Review technical annexures' },
+        { id: 't3', title: 'NHAI Package 4 Tender Fee Exemption', sub: 'Verification required' }
+      ]
+    },
+    {
+      id: 'fleet',
+      dept: 'Fleet and Fuel',
+      count: 1,
+      items: [
+        { id: 'f1', title: 'Bulk Diesel Fuel Purchase Order #412', sub: 'Kolhapur Yard storage tank capacity check' }
+      ]
+    },
+    {
+      id: 'purchase',
+      dept: 'Purchase & Procurement',
+      count: 2,
+      items: [
+        { id: 'p1', title: 'VG-30 Bitumen Procurement Contract', sub: 'Rate negotiation completed' },
+        { id: 'p2', title: 'OPC Cement Grade 53 Quarterly Supply', sub: 'Supplier agreement renewal' }
+      ]
+    },
+    {
+      id: 'finance',
+      dept: 'Vendor & Finance',
+      count: 0,
+      items: []
+    },
+    {
+      id: 'accounts',
+      dept: 'Accounts & Audit',
+      count: 4,
+      items: [
+        { id: 'a1', title: 'RA Bill #15 Tax Deductions Audit', sub: 'GST compliance verification' },
+        { id: 'a2', title: 'Subcontractor Payroll Disbursement', sub: 'Expressway Sec IV workforce' },
+        { id: 'a3', title: 'Machinery Depreciation Ledger Sign-off', sub: 'Q2 Financial closing' },
+        { id: 'a4', title: 'Toll Plaza Revenue Reconciliation', sub: 'Monthly variance check' }
+      ]
+    },
+    {
+      id: 'safety',
+      dept: 'Safety and Compliance',
+      count: 1,
+      items: [
+        { id: 's1', title: 'Expressway Sec IV Safety Gear Audit', sub: 'High-visibility jacket compliance report' }
+      ]
+    },
+    {
+      id: 'it',
+      dept: 'IT & IoT Systems',
+      count: 0,
+      items: []
+    }
   ]);
 
   const triggerToast = (msg: string) => {
@@ -78,7 +110,7 @@ export default function DirectorDashboard() {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Metric,Value\n"
       + `Site Name,${siteName}\n`
-      + "Export Date,2026-08-28\n"
+      + "Export Date,2026-09-01\n"
       + "Status,Active Telemetry\n";
     
     const encodedUri = encodeURI(csvContent);
@@ -150,6 +182,9 @@ export default function DirectorDashboard() {
     ),
     thumbUp: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+    ),
+    sos: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
     )
   };
 
@@ -175,39 +210,19 @@ export default function DirectorDashboard() {
       name: "NH-66 Greenfield Bypass",
       type: "Package 2 • National Highway",
       status: "On Track",
-      risk: "profitable",
+      statusBadgeColor: "bg-emerald-500 text-white",
       statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400" : "bg-[#e6f4ea] text-[#137333]",
       progress: 76,
-      progressColor: "bg-[#137333]",
+      boqProgress: 82,
       budget: "₹240.0 Cr",
-      done: "₹184.0 Cr",
+      startDate: "Jan 2024",
+      endDate: "Mar 2027",
+      expenditure: "₹184.0 Cr",
       billed: "₹162.0 Cr",
       unbilled: "₹22.0 Cr",
-      profit: "+₹32.4 Cr (13.5%) - Profit",
-      deadline: "March 2027 (78% Timeline Elapsed)",
+      aiRecommendation: "Expedite pending JMR sign-off with NHAI Director to unlock ₹22 Cr unbilled cashflow.",
       location: "Kolhapur-Goa Highway Section, NH-66 Chainage 42",
-      boq: {
-        trucks: { actual: 45, proposed: 40 },
-        tippers: { actual: 32, proposed: 35 },
-        excavators: { actual: 18, proposed: 15 },
-        machinery: { actual: 95, proposed: 90 },
-        workforce: { actual: 420, proposed: 400 }
-      },
-      contacts: {
-        pm: "Rahul Deshmukh (+91 98231 44551)",
-        supervisor: "Sanjay Patil (+91 97654 33221)",
-        billing: "Amit Kulkarni (+91 99223 11889)",
-        purchase: "Vikas Mane (+91 98554 22114)",
-        fleet: "Pradip Shinde (+91 97332 55667)"
-      },
-      workOrders: [
-        { id: "WO-2026-001", scope: "Earthwork & Embankment Formation", value: "₹45 Cr", status: "Approved" },
-        { id: "WO-2026-042", scope: "Bituminous Paving DBM/BC", value: "₹80 Cr", status: "Active" }
-      ],
-      cctvFeeds: [
-        { name: "Camera 01 - Batching Plant", status: "Live Feed Online" },
-        { name: "Camera 02 - Bridge Span 4", status: "Live Feed Online" }
-      ]
+      contacts: { pm: "Rahul Deshmukh (+91 98231 44551)" }
     },
     {
       id: 2,
@@ -215,37 +230,19 @@ export default function DirectorDashboard() {
       name: "SH-12 Ring Road Expansion",
       type: "State Highway Corridor",
       status: "Moderate Risk",
-      risk: "moderate",
+      statusBadgeColor: "bg-amber-500 text-white",
       statusClass: isDarkMode ? "bg-amber-950/60 text-amber-400" : "bg-[#fef7e0] text-[#b06000]",
       progress: 61,
-      progressColor: "bg-[#b06000]",
+      boqProgress: 58,
       budget: "₹150.0 Cr",
-      done: "₹92.0 Cr",
+      startDate: "May 2024",
+      endDate: "Jun 2027",
+      expenditure: "₹92.0 Cr",
       billed: "₹83.0 Cr",
       unbilled: "₹9.0 Cr",
-      profit: "+₹14.1 Cr (9.4%) - Profit",
-      deadline: "June 2027 (65% Timeline Elapsed)",
+      aiRecommendation: "Deploy 2 additional excavators to Sector 3 to clear drainage blockage and stabilize sub-base before heavy rain.",
       location: "Kolhapur Ring Road Outer Corridor, Sector 3",
-      boq: {
-        trucks: { actual: 28, proposed: 30 },
-        tippers: { actual: 20, proposed: 25 },
-        excavators: { actual: 10, proposed: 12 },
-        machinery: { actual: 60, proposed: 70 },
-        workforce: { actual: 280, proposed: 320 }
-      },
-      contacts: {
-        pm: "Sameer Joshi (+91 98221 33441)",
-        supervisor: "Anil More (+91 97655 44332)",
-        billing: "Pooja Deshpande (+91 99222 55661)",
-        purchase: "Santosh Pawar (+91 98551 22334)",
-        fleet: "Mahesh Jadhav (+91 97331 44556)"
-      },
-      workOrders: [
-        { id: "WO-2026-012", scope: "Drainage & Retaining Walls", value: "₹35 Cr", status: "In Progress" }
-      ],
-      cctvFeeds: [
-        { name: "Camera 01 - Toll Plaza Junction", status: "Live Feed Online" }
-      ]
+      contacts: { pm: "Sameer Joshi (+91 98221 33441)" }
     },
     {
       id: 3,
@@ -253,75 +250,39 @@ export default function DirectorDashboard() {
       name: "Expressway Flyover Sec IV",
       type: "Urban Elevated Structure",
       status: "On Track",
-      risk: "profitable",
+      statusBadgeColor: "bg-emerald-500 text-white",
       statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400" : "bg-[#e6f4ea] text-[#137333]",
       progress: 29,
-      progressColor: "bg-[#137333]",
+      boqProgress: 35,
       budget: "₹120.0 Cr",
-      done: "₹35.0 Cr",
+      startDate: "Aug 2024",
+      endDate: "Dec 2027",
+      expenditure: "₹35.0 Cr",
       billed: "₹30.2 Cr",
       unbilled: "₹4.8 Cr",
-      profit: "+₹18.0 Cr (15.0%) - Profit",
-      deadline: "December 2027 (30% Timeline Elapsed)",
+      aiRecommendation: "Shift 3 idle excavators from NH-66 yard to accelerate pier foundation casting speed.",
       location: "Expressway Intersection IV, Kolhapur",
-      boq: {
-        trucks: { actual: 20, proposed: 20 },
-        tippers: { actual: 15, proposed: 15 },
-        excavators: { actual: 8, proposed: 10 },
-        machinery: { actual: 45, proposed: 40 },
-        workforce: { actual: 210, proposed: 200 }
-      },
-      contacts: {
-        pm: "Vikram Kadam (+91 98111 22331)",
-        supervisor: "Ramesh Shinde (+91 97444 33221)",
-        billing: "Sneha Patil (+91 99112 33445)",
-        purchase: "Kishor Mane (+91 98443 22112)",
-        fleet: "Ajit Deshmukh (+91 97221 33445)"
-      },
-      workOrders: [
-        { id: "WO-2026-088", scope: "Piling & Foundation Piers", value: "₹50 Cr", status: "Near Completion" }
-      ],
-      cctvFeeds: [
-        { name: "Camera 01 - Pier 12 Casting", status: "Live Feed Online" }
-      ]
+      contacts: { pm: "Vikram Kadam (+91 98111 22331)" }
     },
     {
       id: 4,
       zone: "North Zone",
       name: "Mumbai-Nashik Expressway Corridor",
       type: "High-Speed Freight Corridor",
-      status: "On Track",
-      risk: "profitable",
-      statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400" : "bg-[#e6f4ea] text-[#137333]",
+      status: "Critical Loss",
+      statusBadgeColor: "bg-red-600 text-white",
+      statusClass: isDarkMode ? "bg-red-950/60 text-red-400" : "bg-red-100 text-red-800",
       progress: 48,
-      progressColor: "bg-[#137333]",
+      boqProgress: 50,
       budget: "₹180.0 Cr",
-      done: "₹95.0 Cr",
+      startDate: "Feb 2024",
+      endDate: "Jan 2028",
+      expenditure: "₹95.0 Cr",
       billed: "₹88.0 Cr",
       unbilled: "₹7.0 Cr",
-      profit: "+₹21.5 Cr (14.0%) - Profit",
-      deadline: "January 2028 (50% Timeline Elapsed)",
+      aiRecommendation: "Authorize overnight slope stabilization contractor shift to prevent monsoon schedule slippage.",
       location: "Nashik Ghat Section Sector 7",
-      boq: {
-        trucks: { actual: 35, proposed: 35 },
-        tippers: { actual: 25, proposed: 25 },
-        excavators: { actual: 14, proposed: 15 },
-        machinery: { actual: 80, proposed: 75 },
-        workforce: { actual: 350, proposed: 340 }
-      },
-      contacts: {
-        pm: "Nilesh Kulkarni (+91 98222 11223)",
-        supervisor: "Ganesh Rane (+91 97666 55443)",
-        billing: "Swati Joshi (+91 99333 44556)",
-        purchase: "Deepak Shinde (+91 98555 66778)",
-        fleet: "Suhas Desai (+91 97444 11223)"
-      },
-      workOrders: [
-        { id: "WO-2026-104", scope: "Tunnel Boring & Slope Stabilization", value: "₹65 Cr", status: "Active" }
-      ],
-      cctvFeeds: [
-        { name: "Camera 01 - Tunnel Portal North", status: "Live Feed Online" }
-      ]
+      contacts: { pm: "Nilesh Kulkarni (+91 98222 11223)" }
     }
   ];
 
@@ -331,61 +292,22 @@ export default function DirectorDashboard() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        @keyframes continuous-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes android-fade-in {
-          from { opacity: 0; transform: translateY(12px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes android-slide-right {
-          from { opacity: 0; transform: translateX(-16px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes rainfall {
-          0% { transform: translateY(-20px); opacity: 0; }
-          50% { opacity: 0.8; }
-          100% { transform: translateY(180px); opacity: 0; }
-        }
-        @keyframes gradient-border-flow {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        @keyframes continuous-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes android-fade-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes android-slide-right { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes rainfall { 0% { transform: translateY(-20px); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: translateY(180px); opacity: 0; } }
+        @keyframes chart-draw { from { stroke-dasharray: 0 1000; } to { stroke-dasharray: 1000 0; } }
 
-        .animate-marquee {
-          display: inline-block;
-          animation: marquee 25s linear infinite;
-        }
-        .animate-spin-badge {
-          animation: continuous-spin 6s linear infinite;
-        }
-        .android-card-transition {
-          transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .android-card-transition:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 30px -10px rgba(0,0,0,0.12);
-        }
-        .android-modal-enter {
-          animation: android-fade-in 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-        }
-        .android-slide-enter {
-          animation: android-slide-right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-        }
-        .rain-drop {
-          position: absolute;
-          background: linear-gradient(transparent, rgba(56, 189, 248, 0.8));
-          width: 1.5px;
-          height: 16px;
-          opacity: 0.7;
-          animation: rainfall linear infinite;
-        }
+        .animate-marquee { display: inline-block; animation: marquee 25s linear infinite; }
+        .animate-spin-badge { animation: continuous-spin 6s linear infinite; }
+        .animate-chart { animation: chart-draw 1.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+        .android-card-transition { transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .android-card-transition:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -10px rgba(0,0,0,0.12); }
+        .android-modal-enter { animation: android-fade-in 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+        .android-slide-enter { animation: android-slide-right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+        .rain-drop { position: absolute; background: linear-gradient(transparent, rgba(56, 189, 248, 0.8)); width: 1.5px; height: 16px; opacity: 0.7; animation: rainfall linear infinite; }
+
         .glass-button {
           background: ${isDarkMode ? 'rgba(30, 30, 30, 0.75)' : 'rgba(255, 255, 255, 0.65)'};
           backdrop-filter: blur(12px);
@@ -399,29 +321,22 @@ export default function DirectorDashboard() {
           transform: translateY(-1px);
         }
 
-        .hover-actions {
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity 0.2s ease, transform 0.2s ease;
-          transform: translateY(4px);
+        .glass-progress {
+          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)'};
+          backdrop-filter: blur(8px);
+          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'};
         }
-        .group:hover .hover-actions {
-          opacity: 1;
-          pointer-events: auto;
-          transform: translateY(0);
-        }
+
+        .hover-actions { opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; transform: translateY(4px); }
+        .group:hover .hover-actions { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
         .animated-gradient-border-profitable {
           background: linear-gradient(60deg, #137333, #ffffff, #34a853, #ffffff, #137333);
-          background-size: 300% 300%;
-          animation: gradient-border-flow 6s ease infinite;
-          padding: 1px;
+          background-size: 300% 300%; animation: gradient-border-flow 6s ease infinite; padding: 1px;
         }
         .animated-gradient-border-moderate {
           background: linear-gradient(60deg, #b06000, #ffffff, #f59e0b, #ffffff, #b06000);
-          background-size: 300% 300%;
-          animation: gradient-border-flow 6s ease infinite;
-          padding: 1px;
+          background-size: 300% 300%; animation: gradient-border-flow 6s ease infinite; padding: 1px;
         }
       `}</style>
 
@@ -430,6 +345,32 @@ export default function DirectorDashboard() {
         <div className="fixed bottom-6 right-6 z-50 bg-[#1e1e1e] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-[14px] font-semibold border border-white/10 android-modal-enter flex items-center gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-[#af2024] animate-ping"></span>
           {toastMessage}
+        </div>
+      )}
+
+      {/* AI Action Popup Modal */}
+      {aiPopupSite && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
+          <div className={`${isDarkMode ? 'bg-[#1e1e1e] text-white border-white/10' : 'bg-white text-gray-900 border-gray-100'} rounded-[28px] max-w-lg w-full p-7 shadow-2xl android-modal-enter border`}>
+            <div className={`flex justify-between items-center pb-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
+              <h3 className="text-[18px] font-bold flex items-center gap-2.5">
+                <span className="text-[#af2024] p-2 bg-[#fce8e6] rounded-xl">🤖</span> AI Recommended Action: {aiPopupSite.name}
+              </h3>
+              <button onClick={() => setAiPopupSite(null)} className="w-9 h-9 rounded-full glass-button font-semibold cursor-pointer transition flex items-center justify-center">✕</button>
+            </div>
+            <div className="my-6">
+              <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-[#252525] border-white/5' : 'bg-gray-50 border-gray-200/80'} border mb-4`}>
+                <div className="text-[12px] font-bold text-[#af2024] uppercase tracking-wider mb-1">Recommended Telemetry Optimization</div>
+                <p className="text-[14.5px] leading-relaxed font-medium">{aiPopupSite.aiRecommendation}</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { triggerToast(`Successfully executed AI directive for ${aiPopupSite.name}!`); setAiPopupSite(null); }} className="flex-1 py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-semibold text-[14px] cursor-pointer transition shadow-lg shadow-[#af2024]/20">
+                Take Action ⚡
+              </button>
+              <button onClick={() => setAiPopupSite(null)} className="px-5 py-3 glass-button rounded-2xl font-semibold text-[14px] cursor-pointer">Close</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -443,7 +384,6 @@ export default function DirectorDashboard() {
               </h3>
               <button onClick={() => setShowCalendarModal(false)} className="w-9 h-9 rounded-full glass-button font-semibold cursor-pointer transition flex items-center justify-center">✕</button>
             </div>
-            
             <div className="my-5 flex flex-col gap-3">
               <div className={`p-4 ${isDarkMode ? 'bg-[#252525] border-white/10' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl flex justify-between items-center`}>
                 <div>
@@ -452,89 +392,13 @@ export default function DirectorDashboard() {
                 </div>
                 <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-[11px] rounded-full">Confirmed</span>
               </div>
-
-              <div className={`p-4 ${isDarkMode ? 'bg-[#252525] border-white/10' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl flex justify-between items-center`}>
-                <div>
-                  <div className="font-bold">03:30 PM - SH-12 Site Inspection</div>
-                  <div className={`text-[12.5px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Ring Road Corridor Sector 3 • Sub-base check</div>
-                </div>
-                <span className="px-3 py-1 bg-amber-100 text-amber-800 font-bold text-[11px] rounded-full">High Priority</span>
-              </div>
             </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => triggerToast("Successfully added reminders to native Android/iOS Calendar!")} className="flex-1 py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-semibold text-[14px] cursor-pointer transition shadow-lg shadow-[#af2024]/20">
-                📲 Add reminders to my calendar (Android/iOS)
-              </button>
-              <button onClick={() => setShowCalendarModal(false)} className="px-5 py-3 glass-button rounded-2xl font-semibold text-[14px] cursor-pointer">
-                Close
-              </button>
-            </div>
+            <button onClick={() => setShowCalendarModal(false)} className="w-full py-3 glass-button rounded-2xl font-semibold text-[14px] cursor-pointer">Close</button>
           </div>
         </div>
       )}
 
-      {/* CCTV Video Stream Modal */}
-      {activeCctv && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
-          <div className={`${isDarkMode ? 'bg-[#1e1e1e] text-white border-white/10' : 'bg-white text-gray-900 border-gray-100'} rounded-[28px] max-w-xl w-full p-7 shadow-2xl android-modal-enter border`}>
-            <div className={`flex justify-between items-center pb-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
-              <h3 className="text-[18px] font-semibold flex items-center gap-2.5">
-                <span className="text-[#af2024] p-2 bg-[#fce8e6] rounded-xl">{IconOutlined.cctv}</span> Live Stream: {activeCctv}
-              </h3>
-              <button onClick={() => setActiveCctv(null)} className="w-9 h-9 rounded-full glass-button font-semibold cursor-pointer transition flex items-center justify-center">✕</button>
-            </div>
-            <div className="my-6 bg-[#1e1e1e] text-white h-72 rounded-2xl flex flex-col items-center justify-center gap-3 relative overflow-hidden shadow-inner">
-              <div className="absolute top-4 left-4 bg-red-600/95 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider flex items-center gap-1.5 shadow">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span> LIVE 1080P HD
-              </div>
-              <span className="text-[48px] animate-bounce">🎥</span>
-              <span className="text-[14px] font-medium tracking-wide opacity-90">Kolhapur Site Yard Secure IoT Gateway</span>
-            </div>
-            <button onClick={() => setActiveCctv(null)} className="w-full py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-semibold text-[14px] cursor-pointer transition shadow-lg shadow-[#af2024]/20">Close Stream</button>
-          </div>
-        </div>
-      )}
-
-      {/* Voice Recording Modal */}
-      {showVoiceModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
-          <div className={`${isDarkMode ? 'bg-[#1e1e1e] text-white border-white/10' : 'bg-white text-gray-900 border-gray-100'} rounded-[28px] max-w-md w-full p-7 shadow-2xl android-modal-enter text-center border`}>
-            <h3 className="text-[19px] font-semibold mb-2 flex items-center justify-center gap-2.5">
-              <span className="text-[#af2024]">{IconOutlined.mic}</span> Voice Command Studio
-            </h3>
-            <p className="text-[13.5px] opacity-70 mb-6 leading-relaxed">Speak clearly into your microphone.</p>
-            
-            <div className="w-28 h-28 mx-auto rounded-full bg-[#fce8e6] text-[#af2024] flex items-center justify-center text-[40px] animate-pulse mb-6 border-8 border-[#af2024]/15 shadow-inner">
-              🎙️
-            </div>
-            <button onClick={() => setShowVoiceModal(false)} className="w-full py-3 glass-button rounded-2xl font-semibold text-[14px] cursor-pointer">Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* GPS Map Navigation Modal */}
-      {showMapModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
-          <div className={`${isDarkMode ? 'bg-[#1e1e1e] text-white border-white/10' : 'bg-white text-gray-900 border-gray-100'} rounded-[28px] max-w-2xl w-full p-7 shadow-2xl android-modal-enter border`}>
-            <div className={`flex justify-between items-center pb-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
-              <h3 className="text-[18px] font-semibold flex items-center gap-2.5">
-                <span className="text-[#af2024] p-2 bg-[#fce8e6] rounded-xl">{IconOutlined.map}</span> AI Site Trip Planner & Live GPS Route
-              </h3>
-              <button onClick={() => setShowMapModal(false)} className="w-9 h-9 rounded-full glass-button font-semibold cursor-pointer transition flex items-center justify-center">✕</button>
-            </div>
-            <div className="my-6 bg-gradient-to-br from-gray-900 to-gray-800 text-white h-72 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden shadow-inner border border-gray-800">
-              <span className="text-[44px] z-10 animate-bounce">📍🚗💨</span>
-              <div className="z-10 bg-white/10 backdrop-blur-md px-5 py-2.5 rounded-2xl shadow-lg mt-3 font-semibold text-[13.5px] text-emerald-400 border border-white/10 flex items-center gap-2">
-                <span>{IconOutlined.mapPin}</span> Optimal Route: HQ Kolhapur → NH-66 Bypass (ETA: 42 mins)
-              </div>
-            </div>
-            <button onClick={() => setShowMapModal(false)} className="w-full py-3 glass-button rounded-2xl font-semibold text-[14px] cursor-pointer">Close</button>
-          </div>
-        </div>
-      )}
-
-      {/* Profile Actions Dropdown Modal */}
+      {/* Profile Modal */}
       {showProfileMenu && (
         <div className="fixed inset-0 z-50 flex items-start justify-end p-6 pt-20" onClick={() => setShowProfileMenu(false)}>
           <div className={`${isDarkMode ? 'bg-[#1e1e1e] text-white border-white/10' : 'bg-white text-gray-900 border-gray-100'} rounded-[24px] w-72 shadow-2xl border p-4 flex flex-col gap-2 android-modal-enter`} onClick={(e) => e.stopPropagation()}>
@@ -545,25 +409,19 @@ export default function DirectorDashboard() {
                 <div className="text-[12px] opacity-60 font-normal">sushant@mdinfra.com</div>
               </div>
             </div>
-            <button onClick={() => { setShowProfileMenu(false); triggerToast("Opening Director Account Settings..."); }} className={`w-full text-left px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition flex items-center gap-3 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}>
-              <span className="opacity-60">{IconOutlined.user}</span> View Director Profile
-            </button>
-            <button onClick={() => { setShowProfileMenu(false); triggerToast("Logged out successfully"); }} className={`w-full text-left px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-[#af2024] transition flex items-center gap-3 ${isDarkMode ? 'hover:bg-[#af2024]/10' : 'hover:bg-[#fce8e6]/50'}`}>
+            <button onClick={() => { setShowProfileMenu(false); triggerToast("Logged out successfully"); }} className="w-full text-left px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium text-[#af2024] transition flex items-center gap-3">
               🚪 Logout Session
             </button>
           </div>
         </div>
       )}
 
-      {/* Mobile Sidebar Overlay Backdrop */}
+      {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
-        <div 
-          onClick={() => setIsMobileMenuOpen(false)} 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-xs transition-opacity"
-        />
+        <div onClick={() => setIsMobileMenuOpen(false)} className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-xs transition-opacity" />
       )}
 
-      {/* Responsive Collapsible Sidebar */}
+      {/* Left Sidebar */}
       <aside className={`
         fixed md:static inset-y-0 left-0 z-50 ${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/70'} border-r flex flex-col justify-between p-4 shrink-0 transition-all duration-300 shadow-sm
         ${isSidebarCollapsed ? 'md:w-[80px]' : 'md:w-[280px]'}
@@ -576,12 +434,7 @@ export default function DirectorDashboard() {
                 <img src="/logo.png" alt="MD Infra Logo" className="w-52 h-auto object-contain rounded" />
               </div>
             )}
-            <button 
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="md:hidden w-8 h-8 rounded-xl glass-button flex items-center justify-center font-bold"
-            >
-              ✕
-            </button>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden w-8 h-8 rounded-xl glass-button flex items-center justify-center font-bold">✕</button>
           </div>
 
           {(!isSidebarCollapsed || isMobileMenuOpen) && (
@@ -592,12 +445,7 @@ export default function DirectorDashboard() {
             {menuItems.map((item) => (
               <li 
                 key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSelectedSite(null);
-                  setIsMobileMenuOpen(false);
-                  triggerToast(`Navigated to ${item.name} Module`);
-                }}
+                onClick={() => { setActiveTab(item.id); setSelectedSite(null); setIsMobileMenuOpen(false); triggerToast(`Navigated to ${item.name} Module`); }}
                 className={`flex items-center gap-3.5 p-3 rounded-2xl text-[14px] font-semibold cursor-pointer transition-all ${activeTab === item.id && !selectedSite ? 'bg-[#af2024] text-white shadow-lg shadow-[#af2024]/20 scale-[1.02]' : isDarkMode ? 'text-gray-300 hover:bg-white/5 hover:text-[#af2024]' : 'text-gray-600 hover:bg-gray-50 hover:text-[#af2024]'}`}
                 title={isSidebarCollapsed && !isMobileMenuOpen ? item.name : ''}
               >
@@ -608,7 +456,7 @@ export default function DirectorDashboard() {
           </ul>
         </div>
 
-        {/* Real Light / Dark Mode Toggle below menu items */}
+        {/* Real Light / Dark Mode Toggle */}
         <div className={`border-t ${isDarkMode ? 'border-white/10' : 'border-gray-100'} pt-3 mt-2 flex flex-col gap-3`}>
           <div className={`flex items-center justify-between p-2 rounded-2xl ${isDarkMode ? 'bg-[#222]' : 'bg-gray-50'}`}>
             {(!isSidebarCollapsed || isMobileMenuOpen) && (
@@ -617,10 +465,7 @@ export default function DirectorDashboard() {
               </span>
             )}
             <button 
-              onClick={() => {
-                setIsDarkMode(!isDarkMode);
-                triggerToast(isDarkMode ? "Switched to Light Mode" : "Switched to Dark Mode");
-              }}
+              onClick={() => { setIsDarkMode(!isDarkMode); triggerToast(isDarkMode ? "Switched to Light Mode" : "Switched to Dark Mode"); }}
               className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${isDarkMode ? 'bg-[#af2024]' : 'bg-gray-300'}`}
               title="Toggle Dark/Light Mode"
             >
@@ -629,9 +474,7 @@ export default function DirectorDashboard() {
           </div>
 
           {(!isSidebarCollapsed || isMobileMenuOpen) && (
-            <div className="text-[11.5px] text-gray-400 font-medium px-1">
-              MDI Private Limited • Kolhapur HQ
-            </div>
+            <div className="text-[11.5px] text-gray-400 font-medium px-1">MDI Private Limited • Kolhapur HQ</div>
           )}
         </div>
       </aside>
@@ -640,14 +483,9 @@ export default function DirectorDashboard() {
       <main className="flex-1 flex flex-col overflow-y-auto relative w-full">
         {/* Marquee Tenders News */}
         <div className="bg-[#af2024] text-white text-[13px] font-semibold py-3 px-6 flex items-center overflow-hidden shrink-0 shadow-md gap-4">
-          <button 
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="hidden md:flex glass-button text-white font-semibold px-3.5 py-1.5 rounded-full text-[11px] shrink-0 border border-white/30 items-center gap-1.5 shadow-sm cursor-pointer"
-            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          >
+          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="hidden md:flex glass-button text-white font-semibold px-3.5 py-1.5 rounded-full text-[11px] shrink-0 border border-white/30 items-center gap-1.5 shadow-sm cursor-pointer">
             <span>{isSidebarCollapsed ? '📂 Open Menu' : '📁 Collapse Menu'}</span>
           </button>
-
           <span className="bg-white/15 text-white font-semibold px-3 py-1 rounded-full text-[11px] shrink-0 border border-white/20 hidden sm:flex items-center gap-1.5 shadow-sm">
             {IconOutlined.clipboard} GOV TENDERS TICKER
           </span>
@@ -656,21 +494,13 @@ export default function DirectorDashboard() {
               <span onClick={() => window.open('https://etenders.gov.in', '_blank')} className="hover:underline">
                 ⚡ NHAI releases <b>₹450 Cr</b> EPC Tender for Pune-Nashik Greenfield Corridor (Deadline: Sept 20) → Click to view eProcure
               </span>
-              <span onClick={() => window.open('https://mahatenders.gov.in', '_blank')} className="hover:underline">
-                ⚡ MSRDC announces Mumbai-Goa Coastal Highway Expansion Package 4 (Pre-bid: Sept 12) → Click to view portal
-              </span>
             </div>
           </div>
         </div>
 
         <header className={`${isDarkMode ? 'bg-[#181818]/80 border-white/10' : 'bg-white/80 border-gray-200/70'} backdrop-blur-md px-4 sm:px-8 py-4 border-b flex justify-between items-center sticky top-0 z-10 shadow-xs gap-3`}>
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="md:hidden p-2.5 rounded-2xl glass-button transition"
-            >
-              ☰
-            </button>
+            <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden p-2.5 rounded-2xl glass-button transition">☰</button>
             <div>
               <h2 className={`text-[18px] sm:text-[22px] font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-[#1e1e1e]'}`}>Sushant's Command Centre</h2>
               <p className="text-[12px] sm:text-[13px] text-gray-400 font-normal mt-0.5 hidden sm:block">Live Interactive Enterprise ERP Environment</p>
@@ -678,132 +508,38 @@ export default function DirectorDashboard() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className={`hidden lg:flex items-center ${isDarkMode ? 'bg-[#222] border-white/10 focus-within:bg-[#2a2a2a]' : 'bg-gray-50 border-gray-200/80 focus-within:bg-white'} border rounded-2xl px-3.5 py-2 w-64 xl:w-72 gap-2.5 transition focus-within:ring-2 focus-within:ring-[#af2024]/20`}>
-              <input 
-                type="text" 
-                value={voiceQuery}
-                onChange={(e) => setVoiceQuery(e.target.value)}
-                placeholder="Dispatch command..."
-                className="border-none bg-transparent outline-none text-[13.5px] font-normal w-full placeholder-gray-400"
-              />
-              <button 
-                onClick={() => setShowVoiceModal(true)}
-                className="w-8 h-8 rounded-full border-none flex items-center justify-center text-white bg-[#1e1e1e] cursor-pointer transition shrink-0 hover:bg-[#af2024] shadow-sm"
-              >
-                {IconOutlined.mic}
-              </button>
+            <div className={`hidden lg:flex items-center ${isDarkMode ? 'bg-[#222] border-white/10' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl px-3.5 py-2 w-64 xl:w-72 gap-2.5 transition`}>
+              <input type="text" value={voiceQuery} onChange={(e) => setVoiceQuery(e.target.value)} placeholder="Dispatch command..." className="border-none bg-transparent outline-none text-[13.5px] font-normal w-full placeholder-gray-400" />
             </div>
-
-            <div 
-              title="4 Pending Office Tasks" 
-              onClick={() => triggerToast("Opening Office Task Management Queue...")} 
-              className="relative glass-button px-3.5 sm:px-4 py-2.5 rounded-2xl cursor-pointer font-semibold text-[13px] transition flex items-center gap-2"
-            >
-              <span className="hidden sm:inline">📋 Pending Tasks</span>
-              <span className="sm:hidden">📋</span>
-              <span className="w-5 h-5 bg-[#af2024] text-white rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm">4</span>
+            <div onClick={() => setShowCalendarModal(true)} className="relative glass-button px-3.5 sm:px-4 py-2.5 rounded-2xl cursor-pointer font-semibold text-[13px] transition flex items-center gap-2">
+              <span>📅 Schedule</span>
             </div>
-
-            <div onClick={() => triggerToast("Opened Notification Center")} className="relative glass-button p-2.5 sm:p-3 rounded-2xl cursor-pointer transition">
-              {IconOutlined.bell}
-              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center shadow-md animate-spin-badge">
-                <span className="font-extrabold text-[12px] leading-none">✱</span>
-              </div>
-            </div>
-
             <div onClick={() => setShowProfileMenu(!showProfileMenu)} className={`flex items-center gap-3 cursor-pointer p-1.5 rounded-2xl transition border ${isDarkMode ? 'hover:bg-white/5 border-transparent hover:border-white/10' : 'hover:bg-gray-50 border-transparent hover:border-gray-200'}`}>
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#af2024] text-white flex items-center justify-center font-bold text-[14px] shadow-md shadow-[#af2024]/20">SU</div>
-              <div className="hidden md:block">
-                <div className="text-[14px] font-bold leading-tight">Sushant</div>
-                <div className="text-[11.5px] text-gray-400 font-medium">Director Level 1</div>
-              </div>
             </div>
           </div>
         </header>
 
         <div className="p-4 sm:p-8 flex flex-col gap-6 android-slide-enter">
-          {/* ==========================================
-              DEDICATED FULL-PAGE SITE INSPECTION VIEW
-             ========================================== */}
           {selectedSite ? (
             <div className="flex flex-col gap-6 android-slide-enter">
               <div className={`flex flex-col md:flex-row justify-between items-start md:items-center ${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[24px] p-5 shadow-sm gap-4`}>
-                <button 
-                  onClick={() => setSelectedSite(null)}
-                  className="px-4.5 py-2.5 glass-button rounded-2xl font-semibold text-[13.5px] cursor-pointer transition"
-                >
-                  ← Back to Command Centre
-                </button>
+                <button onClick={() => setSelectedSite(null)} className="px-4.5 py-2.5 glass-button rounded-2xl font-semibold text-[13.5px] cursor-pointer transition">← Back to Command Centre</button>
                 <div className="text-left md:text-right">
                   <h2 className="text-[19px] font-bold">{selectedSite.name}</h2>
                   <p className="text-[12px] text-gray-400 font-medium">{selectedSite.type} • {selectedSite.location}</p>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
-                  <button 
-                    onClick={() => handleScheduleMeeting(selectedSite.name)}
-                    className="px-4.5 py-2.5 glass-button rounded-2xl text-[13.5px] font-bold cursor-pointer transition flex items-center gap-2 border border-sky-200/60 bg-sky-50/50 text-gray-900"
-                  >
-                    📅 Schedule Meeting
-                  </button>
-                  <button 
-                    onClick={() => handleExcelExport(selectedSite.name)}
-                    className="px-4.5 py-2.5 bg-[#137333] hover:bg-[#0d5023] text-white rounded-2xl text-[13.5px] font-semibold cursor-pointer transition shadow-md shadow-[#137333]/20"
-                  >
-                    📊 Export Excel Report
-                  </button>
-                </div>
-              </div>
-
-              {/* Financial Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[24px] p-6 shadow-sm android-card-transition`}>
-                  <span className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Project Cost</span>
-                  <div className="text-[36px] font-extrabold text-[#af2024] mt-1.5"><b>{selectedSite.budget}</b></div>
-                </div>
-                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[24px] p-6 shadow-sm android-card-transition`}>
-                  <span className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Unbilled JMR Amount</span>
-                  <div className="text-[30px] font-extrabold text-[#b06000] mt-1.5"><b>{selectedSite.unbilled}</b></div>
-                </div>
-                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[24px] p-6 shadow-sm android-card-transition`}>
-                  <span className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Billed Amount (RA)</span>
-                  <div className="text-[30px] font-extrabold mt-1.5"><b>{selectedSite.billed}</b></div>
-                </div>
-              </div>
-
-              {/* BOQ Comparison */}
-              <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[24px] p-6 shadow-sm android-card-transition`}>
-                <h4 className="font-bold text-[16px] mb-5">On-Site Assets vs Proposed BOQ</h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
-                  <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}>
-                    <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider">Trucks</div>
-                    <div className="text-[20px] font-bold mt-2"><b>{selectedSite.boq.trucks.actual}</b> / {selectedSite.boq.trucks.proposed}</div>
-                  </div>
-                  <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}>
-                    <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider">Tippers</div>
-                    <div className="text-[20px] font-bold mt-2"><b>{selectedSite.boq.tippers.actual}</b> / {selectedSite.boq.tippers.proposed}</div>
-                  </div>
-                  <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}>
-                    <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider">Excavators</div>
-                    <div className="text-[20px] font-bold mt-2"><b>{selectedSite.boq.excavators.actual}</b> / {selectedSite.boq.excavators.proposed}</div>
-                  </div>
-                  <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}>
-                    <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider">Machinery</div>
-                    <div className="text-[20px] font-bold mt-2"><b>{selectedSite.boq.machinery.actual}</b> / {selectedSite.boq.machinery.proposed}</div>
-                  </div>
-                  <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl md:col-span-1 col-span-2`}>
-                    <div className="text-[11.5px] text-gray-400 font-bold uppercase tracking-wider">Workforce</div>
-                    <div className="text-[20px] font-bold text-[#137333] mt-2"><b>{selectedSite.boq.workforce.actual}</b> / {selectedSite.boq.workforce.proposed}</div>
-                  </div>
+                  <button onClick={() => handleScheduleMeeting(selectedSite.name)} className="px-4.5 py-2.5 glass-button rounded-2xl text-[13.5px] font-bold cursor-pointer transition">📅 Schedule Meeting</button>
+                  <button onClick={() => handleExcelExport(selectedSite.name)} className="px-4.5 py-2.5 bg-[#137333] hover:bg-[#0d5023] text-white rounded-2xl text-[13.5px] font-semibold cursor-pointer transition">📊 Export Report</button>
                 </div>
               </div>
             </div>
           ) : (
-            /* ==========================================
-                COMMAND CENTRE DASHBOARD
-               ========================================== */
             activeTab === 'command' && (
               <div className="flex flex-col gap-6 android-slide-enter">
-                {/* Message at top & Weather today with Rain Animation */}
+                
+                {/* Executive Morning Briefing & Weather */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-br from-[#1e1e1e] to-gray-900 text-white rounded-[28px] p-7 flex flex-col justify-between shadow-xl android-card-transition relative overflow-hidden">
                     <div>
@@ -813,7 +549,7 @@ export default function DirectorDashboard() {
                     </div>
                     <div className="mt-6 pt-5 border-t border-white/15 flex justify-between text-[13px] font-medium opacity-90">
                       <span>📍 Kolhapur Site Headquarters</span>
-                      <span>🕒 Aug 28, 2026 • 12:11 PM</span>
+                      <span>🕒 Sept 1, 2026 • 12:21 PM</span>
                     </div>
                   </div>
 
@@ -840,129 +576,229 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* ==========================================
-                    1. CONSOLIDATED DATA & EXPENSES SECTION
+                    1. CONSOLIDATED DASHBOARD WITH PLAIN PIE-CHART, PERCENTAGES INSIDE, AND SITE STATUS LIST
                    ========================================== */}
-                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition`}>
-                  <h3 className="text-[18px] font-bold mb-5 flex items-center gap-2">
-                    <span>📈</span> Consolidated Enterprise Financial & Expense Dashboard
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-                    <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl`}>
-                      <div className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Cost (All Projects)</div>
-                      <div className="text-[26px] font-extrabold text-[#af2024] mt-1">₹510.0 Cr</div>
-                    </div>
-                    <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl`}>
-                      <div className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Active Projects</div>
-                      <div className="text-[26px] font-extrabold mt-1">4 Sites</div>
-                    </div>
-                    <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl`}>
-                      <div className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Unbilled Amount</div>
-                      <div className="text-[26px] font-extrabold text-[#b06000] mt-1">₹42.8 Cr</div>
-                    </div>
-                    <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl`}>
-                      <div className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider">Total Billed Amount</div>
-                      <div className="text-[26px] font-extrabold text-[#137333] mt-1">₹363.2 Cr</div>
+                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-8 shadow-sm android-card-transition`}>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                    <h3 className="text-[19px] font-bold flex items-center gap-2.5">
+                      <span>📈</span> Consolidated Enterprise Financial & Expense Dashboard
+                    </h3>
+                    <div className={`flex p-1.5 rounded-2xl ${isDarkMode ? 'bg-[#222]' : 'bg-gray-100'}`}>
+                      <button 
+                        onClick={() => setConsolidatedTab('financial')}
+                        className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition cursor-pointer ${consolidatedTab === 'financial' ? 'bg-[#af2024] text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}
+                      >
+                        Financial Report
+                      </button>
+                      <button 
+                        onClick={() => setConsolidatedTab('boq')}
+                        className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition cursor-pointer ${consolidatedTab === 'boq' ? 'bg-[#af2024] text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}
+                      >
+                        BOQ Report
+                      </button>
                     </div>
                   </div>
 
-                  <div className={`pt-5 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-100'}`}>
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-bold text-[15px]">Consolidated Operational Expenses vs Budget</h4>
-                      <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-[12px] rounded-full flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span> Expenses Optimal & Well Managed
-                      </span>
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    {/* Metrics column with verified legibility (including Total Billed) */}
+                    <div className="lg:col-span-4 flex flex-col gap-4">
+                      {consolidatedTab === 'financial' ? (
+                        <>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Total Project Cost</span><div className="text-2xl font-extrabold text-[#af2024] mt-0.5">₹510.0 Cr</div></div>
+                            <span className="w-4 h-4 rounded-full bg-[#af2024] shadow-sm"></span>
+                          </div>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Expenditure Date</span><div className="text-2xl font-extrabold text-[#b06000] mt-0.5">₹415.0 Cr</div></div>
+                            <span className="w-4 h-4 rounded-full bg-[#b06000] shadow-sm"></span>
+                          </div>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Unbilled Amount</span><div className="text-2xl font-extrabold text-amber-600 mt-0.5">₹42.8 Cr</div></div>
+                            <span className="w-4 h-4 rounded-full bg-amber-500 shadow-sm"></span>
+                          </div>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Total Billed Amount</span><div className="text-2xl font-extrabold text-[#137333] mt-0.5">₹363.2 Cr</div></div>
+                            <span className="w-4 h-4 rounded-full bg-[#137333] shadow-sm"></span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Earthwork & Embankment</span><div className="text-2xl font-extrabold text-[#137333] mt-0.5">88% Done</div></div>
+                          </div>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Structures & Piling</span><div className="text-2xl font-extrabold text-sky-600 mt-0.5">74% Done</div></div>
+                          </div>
+                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
+                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Bituminous Paving DBM/BC</span><div className="text-2xl font-extrabold text-[#b06000] mt-0.5">62% Done</div></div>
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}><div className="text-[11px] text-gray-400 uppercase font-bold">Machinery</div><div className="text-[16px] font-bold mt-1">₹76.5 Cr</div></div>
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}><div className="text-[11px] text-gray-400 uppercase font-bold">Fleet</div><div className="text-[16px] font-bold mt-1">₹44.2 Cr</div></div>
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}><div className="text-[11px] text-gray-400 uppercase font-bold">Labour</div><div className="text-[16px] font-bold mt-1">₹62.8 Cr</div></div>
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl`}><div className="text-[11px] text-gray-400 uppercase font-bold">Material</div><div className="text-[16px] font-bold mt-1">₹148.0 Cr</div></div>
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl col-span-2 sm:col-span-1`}><div className="text-[11px] text-gray-400 uppercase font-bold">Miscellaneous</div><div className="text-[16px] font-bold mt-1">₹15.3 Cr</div></div>
+                    {/* Plain, Uncropped Pie Chart with Percentage Written Inside */}
+                    <div className="lg:col-span-4 flex justify-center items-center relative py-6">
+                      <div className="relative p-3 rounded-full">
+                        <svg className="w-72 h-72 transform -rotate-90 animate-chart overflow-visible" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke={isDarkMode ? '#252525' : '#e2e8f0'} strokeWidth="5"></circle>
+                          {consolidatedTab === 'financial' ? (
+                            <>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#10b981" strokeWidth="5" strokeDasharray="50 50" strokeDashoffset="0"></circle>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f59e0b" strokeWidth="5" strokeDasharray="30 70" strokeDashoffset="-50"></circle>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#3b82f6" strokeWidth="5" strokeDasharray="10 90" strokeDashoffset="-80"></circle>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#ef4444" strokeWidth="5" strokeDasharray="10 90" strokeDashoffset="-90"></circle>
+                            </>
+                          ) : (
+                            <>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#10b981" strokeWidth="5" strokeDasharray="45 55" strokeDashoffset="0"></circle>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#0284c7" strokeWidth="5" strokeDasharray="30 70" strokeDashoffset="-45"></circle>
+                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f59e0b" strokeWidth="5" strokeDasharray="25 75" strokeDashoffset="-75"></circle>
+                            </>
+                          )}
+                        </svg>
+
+                        {/* Percentage written inside the plain pie chart */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                          <span className="text-3xl font-black tracking-tight">{consolidatedTab === 'financial' ? '50%' : '45%'}</span>
+                          <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">{consolidatedTab === 'financial' ? 'Billed Share' : 'Earthwork'}</span>
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Site Status List (Replacing Map) */}
+                    <div className={`lg:col-span-4 rounded-2xl p-6 flex flex-col justify-between ${isDarkMode ? 'bg-[#222]/80 border-white/5' : 'bg-gray-50 border-gray-200/60'} border h-80 overflow-y-auto shadow-inner`}>
+                      <div className="text-[12px] font-bold uppercase tracking-wider text-gray-400 mb-4">
+                        🏢 Strategic Sites Status ({consolidatedTab === 'financial' ? 'Profitability' : 'BOQ Progress'})
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        {allSites.map((site) => (
+                          <div 
+                            key={site.id}
+                            onClick={() => setSelectedSite(site)}
+                            className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#1a1a1a] hover:bg-[#2a2a2a]' : 'bg-white hover:bg-gray-100'} border border-gray-200/50 flex items-center justify-between cursor-pointer transition shadow-xs`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="w-4 h-4 rounded-full shadow-sm shrink-0" style={{ backgroundColor: site.riskColor }}></span>
+                              <span className={`font-extrabold text-[14px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{site.name}</span>
+                            </div>
+                            <span className={`px-2.5 py-1 rounded-md text-[11.5px] font-extrabold ${site.statusBadgeColor}`}>
+                              {site.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
                 {/* ==========================================
-                    2. ZONEWISE STRATEGIC SITES CARDS SECTION
+                    2. ZONE-WISE STRATEGIC HUB (VERTICAL ACCORDIONS WITH ENLARGED NUMBERS & HIGH-CONTRAST NAMES)
                    ========================================== */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* South Zone Card */}
-                  <div className="animated-gradient-border-profitable rounded-[28px] shadow-sm">
-                    <div className={`${isDarkMode ? 'bg-[#181818]' : 'bg-white'} rounded-[27px] p-6 flex flex-col justify-between h-full`}>
-                      <div>
-                        <div className={`flex justify-between items-center pb-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'} mb-5`}>
-                          <h3 className="text-[18px] font-bold flex items-center gap-2">
-                            <span>📍</span> South Zone Strategic Hub
-                          </h3>
-                          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-[11px] rounded-full">2 Active Sites</span>
-                        </div>
+                <div className="flex flex-col gap-6">
+                  <h3 className="text-[18px] font-bold flex items-center gap-2">
+                    <span>📍</span> Zone-wise Strategic Hubs
+                  </h3>
 
-                        <div className="flex flex-col gap-4">
-                          {allSites.filter(s => s.zone === "South Zone").map(site => (
-                            <div key={site.id} className={`group p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3`}>
-                              <div>
-                                <div className="font-bold">{site.name}</div>
-                                <div className="text-[12.5px] text-gray-400">{site.type} • Progress: <b>{site.progress}%</b></div>
-                              </div>
-                              <button 
-                                onClick={() => setSelectedSite(site)}
-                                className="hover-actions px-3 py-1.5 glass-button rounded-xl text-[12px] font-semibold transition"
-                              >
-                                Check Details
-                              </button>
+                  {['North Zone', 'South Zone'].map((zoneName) => {
+                    const isZoneOpen = openZone === zoneName;
+                    const zoneSites = allSites.filter(s => s.zone === zoneName);
+
+                    return (
+                      <div key={zoneName} className={`animated-gradient-border-${zoneName === 'South Zone' ? 'profitable' : 'moderate'} rounded-[28px] shadow-sm`}>
+                        <div className={`${isDarkMode ? 'bg-[#181818]' : 'bg-white'} rounded-[27px] p-6`}>
+                          
+                          {/* Zone Accordion Header */}
+                          <div onClick={() => setOpenZone(isZoneOpen ? null : zoneName)} className="flex justify-between items-center cursor-pointer pb-2">
+                            <h4 className="text-[18px] font-bold flex items-center gap-2.5">
+                              <span>🌐</span> {zoneName} Hub ({zoneSites.length} Sites Active)
+                            </h4>
+                            <span className="text-xl font-bold text-gray-400">{isZoneOpen ? '▲' : '▼'}</span>
+                          </div>
+
+                          {/* Zone Content */}
+                          {isZoneOpen && (
+                            <div className="mt-5 flex flex-col gap-4 animate-fadeIn">
+                              {zoneSites.map((site) => {
+                                const isSiteOpen = openSiteId === site.id;
+
+                                return (
+                                  <div key={site.id} className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/70'} border rounded-2xl flex flex-col gap-4 shadow-xs`}>
+                                    
+                                    {/* Site Brief Header with High-Contrast Bold Name */}
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                      <div className="cursor-pointer flex-1" onClick={() => setOpenSiteId(isSiteOpen ? null : site.id)}>
+                                        <div className="flex items-center gap-3 flex-wrap">
+                                          <span className={`font-extrabold text-lg ${isDarkMode ? 'text-white' : 'text-[#0f172a]'}`}>{site.name}</span>
+                                          <span className={`px-3 py-1 rounded-full text-[12px] font-bold ${site.statusClass}`}>{site.status}</span>
+                                        </div>
+                                        <div className="text-[13.5px] text-gray-400 mt-1">
+                                          Cost: <b>{site.budget}</b> • Timeline: {site.startDate} to {site.endDate}
+                                        </div>
+
+                                        {/* Dual Glassmorphism Progress Bars */}
+                                        <div className="flex flex-col gap-1.5 mt-3 w-full sm:w-96">
+                                          <div className="flex justify-between text-[11px] font-bold text-gray-400">
+                                            <span>Timeline Progress ({site.progress}%)</span>
+                                            <span>BOQ Completed ({site.boqProgress}%)</span>
+                                          </div>
+                                          <div className="flex gap-2 w-full">
+                                            <div className="flex-1 h-3 glass-progress rounded-full overflow-hidden">
+                                              <div className="h-full bg-[#af2024] rounded-full" style={{ width: `${site.progress}%` }}></div>
+                                            </div>
+                                            <div className="flex-1 h-3 glass-progress rounded-full overflow-hidden">
+                                              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${site.boqProgress}%` }}></div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Action Buttons */}
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <button onClick={() => setAiPopupSite(site)} className="px-3.5 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 rounded-xl text-[12.5px] font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                          <span>✨</span> AI Action
+                                        </button>
+                                        <button onClick={() => triggerToast(`🚨 SOS Initiated! Connecting with Project Manager ${site.contacts.pm}...`)} className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-[12.5px] font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                          <span>{IconOutlined.sos}</span> SOS
+                                        </button>
+                                        <button onClick={() => setSelectedSite(site)} className="px-4 py-2 glass-button rounded-xl text-[12.5px] font-semibold transition cursor-pointer">
+                                          Check Details →
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* Detailed Sub-Accordion Content with Enlarged Numbers */}
+                                    {isSiteOpen && (
+                                      <div className={`pt-4 mt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200/80'} grid grid-cols-2 sm:grid-cols-4 gap-4 text-center android-slide-enter`}>
+                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Project Cost</div>
+                                          <div className="text-[18px] font-extrabold text-[#af2024] mt-1">{site.budget}</div>
+                                        </div>
+                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Unbilled Amount</div>
+                                          <div className="text-[18px] font-extrabold text-[#b06000] mt-1">{site.unbilled}</div>
+                                        </div>
+                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Total Billed</div>
+                                          <div className="text-[18px] font-extrabold text-gray-900 dark:text-white mt-1">{site.billed}</div>
+                                        </div>
+                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Expenditure To Date</div>
+                                          <div className="text-[18px] font-extrabold text-[#137333] mt-1">{site.expenditure}</div>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                  </div>
+                                );
+                              })}
                             </div>
-                          ))}
+                          )}
+
                         </div>
                       </div>
-
-                      <button 
-                        onClick={() => triggerToast("Generating South Zone Consolidated Financial & Telemetry Report...")}
-                        className="mt-6 w-full py-3 glass-button text-emerald-500 font-bold text-[13.5px] transition border border-emerald-300/40 bg-emerald-500/10"
-                      >
-                        Check Consolidated Report of this zone 📊
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* North Zone Card */}
-                  <div className="animated-gradient-border-moderate rounded-[28px] shadow-sm">
-                    <div className={`${isDarkMode ? 'bg-[#181818]' : 'bg-white'} rounded-[27px] p-6 flex flex-col justify-between h-full`}>
-                      <div>
-                        <div className={`flex justify-between items-center pb-4 border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'} mb-5`}>
-                          <h3 className="text-[18px] font-bold flex items-center gap-2">
-                            <span>📍</span> North Zone Strategic Hub
-                          </h3>
-                          <span className="px-3 py-1 bg-amber-100 text-amber-800 font-bold text-[11px] rounded-full">2 Active Sites</span>
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                          {allSites.filter(s => s.zone === "North Zone").map(site => (
-                            <div key={site.id} className={`group p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-100'} border rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3`}>
-                              <div>
-                                <div className="font-bold">{site.name}</div>
-                                <div className="text-[12.5px] text-gray-400">{site.type} • Progress: <b>{site.progress}%</b></div>
-                              </div>
-                              <button 
-                                onClick={() => setSelectedSite(site)}
-                                className="hover-actions px-3 py-1.5 glass-button rounded-xl text-[12px] font-semibold transition"
-                              >
-                                Check Details
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button 
-                        onClick={() => triggerToast("Generating North Zone Consolidated Financial & Telemetry Report...")}
-                        className="mt-6 w-full py-3 glass-button text-amber-500 font-bold text-[13.5px] transition border border-amber-300/40 bg-amber-500/10"
-                      >
-                        Check Consolidated Report of this zone 📊
-                      </button>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
 
                 {/* Critical Notification Centre */}
@@ -975,83 +811,43 @@ export default function DirectorDashboard() {
                   </div>
                 </div>
 
-                {/* ==========================================
-                    AI RECOMMENDATIONS & EXCAVATOR SHIFTING
-                   ========================================== */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-[#1e1e1e] text-white rounded-[28px] p-7 flex flex-col justify-between shadow-xl android-card-transition relative overflow-hidden">
-                    <div className="absolute -left-8 -top-8 w-40 h-40 bg-[#af2024]/20 rounded-full blur-3xl pointer-events-none"></div>
-                    <div>
-                      <div className="flex items-center gap-2 font-bold text-[12px] uppercase tracking-widest opacity-70 mb-2">
-                        <span>🤖</span> AI Recommendation (Next Best Action)
-                      </div>
-                      <h3 className="text-[19px] font-bold">Approve Pending JMR Sign-off for NH-66</h3>
-                      <p className="text-[14px] opacity-85 font-normal mt-1.5 leading-relaxed">Accelerates billing cycle by 5 days and unlocks <b>₹22 Cr</b> unbilled cash flow.</p>
-                    </div>
-                    <button onClick={() => triggerToast("JMR approval fast-tracked!")} className="mt-5 px-5 py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl text-[13.5px] font-semibold cursor-pointer w-fit transition shadow-lg shadow-[#af2024]/20">
-                      Execute Fast-Track Approval →
-                    </button>
-                  </div>
-
-                  <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 flex flex-col justify-between shadow-sm android-card-transition`}>
-                    <div>
-                      <div className="flex items-center gap-2 font-bold text-[12px] text-[#af2024] uppercase tracking-widest mb-2">
-                        <span>🚜</span> AI Business Action (Idle Equipment Shift)
-                      </div>
-                      <h3 className="text-[18px] font-bold">Shift <b>3 Idle Excavators</b> from NH-66 Yard to Expressway Sec IV</h3>
-                      <p className="text-[13.5px] text-gray-400 font-normal mt-1.5 leading-relaxed">IoT telemetry indicates units idle for <b>6 consecutive days</b> while Expressway piling needs support.</p>
-                    </div>
-                    <button onClick={() => triggerToast("Excavator shift order approved & dispatched!")} className="mt-5 px-5 py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl text-[13.5px] font-semibold cursor-pointer w-fit transition shadow-md">
-                      Approve & Execute Shift Order →
-                    </button>
-                  </div>
-                </div>
-
-                {/* ==========================================
-                    3. DEPARTMENTAL PENDING APPROVALS SECTION
-                   ========================================== */}
+                {/* Departmental Pending Approvals Queue */}
                 <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition`}>
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-[18px] font-bold flex items-center gap-2.5">
                       <span className="text-[#af2024]">{IconOutlined.clipboard}</span> Departmental Pending Approvals Queue
                     </h3>
-                    <span className="text-[12.5px] text-gray-400 font-semibold">Action Required across 7 Departments</span>
+                    <span className="text-[12.5px] text-gray-400 font-semibold">Asymmetrical Executive Overview</span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {departmentApprovals.map(app => (
-                      <div key={app.id} className={`group p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl flex flex-col justify-between shadow-xs relative android-card-transition`}>
-                        <div className="absolute -top-3 -right-3 w-7 h-7 bg-[#af2024] text-white rounded-full flex items-center justify-center font-bold text-[12px] shadow-md">
+                      <div key={app.id} className={`group p-6 ${isDarkMode ? 'bg-[#222]/80 border-white/10' : 'bg-gradient-to-br from-white to-gray-50/80 border-gray-200/90'} border rounded-[24px] flex flex-col justify-between shadow-xs relative android-card-transition overflow-hidden`}>
+                        <div className={`absolute top-4 right-4 w-7 h-7 ${app.count > 0 ? 'bg-[#af2024] text-white shadow-md' : isDarkMode ? 'bg-white/10 text-gray-400' : 'bg-gray-100 text-gray-500'} rounded-full flex items-center justify-center font-bold text-[12px]`}>
                           {app.count}
                         </div>
-
                         <div>
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-[11.5px] font-bold uppercase tracking-wider text-gray-400">{app.dept} Department</span>
-                            <button 
-                              onClick={() => triggerToast(`Opening all pending approvals for ${app.dept}...`)}
-                              className="text-[12px] font-bold text-[#af2024] hover:underline cursor-pointer"
-                            >
-                              View all →
-                            </button>
-                          </div>
-                          <div className="font-bold text-[15px] mt-1 leading-snug">{app.title}</div>
-                        </div>
-
-                        <div className={`hover-actions flex items-center gap-2 mt-5 pt-3 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200/60'}`}>
-                          <button 
-                            onClick={() => triggerToast(`Approved ${app.title} for ${app.dept}!`)}
-                            className="px-3 py-1.5 bg-[#137333] hover:bg-[#0d5023] text-white rounded-xl text-[12px] font-bold transition flex items-center gap-1 shadow-xs shrink-0"
-                            title="Approve"
-                          >
-                            <span>{IconOutlined.thumbUp}</span> Approve
-                          </button>
-                          <button 
-                            onClick={() => triggerToast(`Flagged ${app.title} for Executive Discussion!`)}
-                            className="px-3 py-1.5 glass-button rounded-xl text-[12px] font-bold transition shrink-0"
-                          >
-                            Need Discussion
-                          </button>
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">{app.dept}</div>
+                          {app.count > 0 ? (
+                            <div className="flex flex-col gap-3.5 my-2 pr-4">
+                              {app.items.map((item, idx) => (
+                                <div key={idx} className={`pb-3 ${idx < app.items.length - 1 ? `border-b ${isDarkMode ? 'border-white/10' : 'border-gray-100'}` : ''}`}>
+                                  <div className="font-bold text-[14px] leading-snug">{item.title}</div>
+                                  <div className="text-[12px] text-gray-400 font-normal mt-0.5">{item.sub}</div>
+                                  <div className="hover-actions flex items-center gap-2 mt-2.5 pt-2">
+                                    <button onClick={() => triggerToast(`Approved: ${item.title}`)} className="px-2.5 py-1 bg-[#137333] hover:bg-[#0d5023] text-white rounded-lg text-[11.5px] font-bold transition flex items-center gap-1 shadow-xs">
+                                      <span>{IconOutlined.thumbUp}</span> Approve
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="py-6 text-center">
+                              <div className="text-[24px] mb-1 opacity-40">✨</div>
+                              <div className="text-[13.5px] font-medium text-gray-400 italic">All caught up! No pending approvals.</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1065,7 +861,7 @@ export default function DirectorDashboard() {
                       <span className="text-[#af2024]">{IconOutlined.calendar}</span> Executive Calendar (Click)
                     </h3>
                     <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl text-[13.5px] shadow-xs`}>
-                      <div className="font-bold text-[#af2024] mb-1.5">Today: August 28, 2026</div>
+                      <div className="font-bold text-[#af2024] mb-1.5">Today: Sept 1, 2026</div>
                       <ul className="text-gray-400 font-medium flex flex-col gap-1.5">
                         <li>• 11:00 AM - Board Meeting</li>
                         <li>• 03:30 PM - SH-12 Inspection</li>
@@ -1082,7 +878,6 @@ export default function DirectorDashboard() {
                     <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl text-[13.5px] font-normal shadow-xs`}>
                       <div className="font-bold mb-1">HQ Kolhapur → NH-66 Site 2</div>
                       <div className="text-emerald-400 font-semibold mb-3">AI Route: Via NH48 Bypass (<b>42 mins</b>)</div>
-                      <button onClick={() => setShowMapModal(true)} className="w-full py-2.5 glass-button rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm">Start GPS Navigation →</button>
                     </div>
                   </div>
 
@@ -1092,7 +887,7 @@ export default function DirectorDashboard() {
                     </h3>
                     <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl text-[13.5px] font-normal shadow-xs`}>
                       <div className="flex justify-between font-bold mb-2"><span>Material</span><span>Scheduled Use</span></div>
-                      <div className={`flex justify-between text-gray-400 py-1.5 border-b border-dashed ${isDarkMode ? 'border-white/10' : 'border-gray-200'} font-medium`}><span>Bitumen VG-30</span><span><b>120 Metric Tons</b></span></div>
+                      <div className="flex justify-between text-gray-400 py-1.5 border-b border-dashed border-gray-200 font-medium"><span>Bitumen VG-30</span><span><b>120 Metric Tons</b></span></div>
                       <div className="flex justify-between text-gray-400 pt-1.5 font-medium"><span>OPC Cement Grade 53</span><span><b>450 Bags</b></span></div>
                     </div>
                   </div>
@@ -1109,12 +904,8 @@ export default function DirectorDashboard() {
                         <h4 className="font-bold text-[15px]">Ishotsav 2.0 (Annual Fest)</h4>
                         <span className="px-3 py-1 bg-indigo-100 text-indigo-800 font-bold text-[11px] rounded-full">Nov 1, 2026</span>
                       </div>
-                      <p className="text-[13px] text-gray-400 mb-3">Countdown: <b>65 Days Left</b></p>
-                      <div className="flex justify-between text-[12.5px] font-semibold mb-1 text-gray-400">
-                        <span>Preparation Progress</span>
-                        <span>65%</span>
-                      </div>
-                      <div className={`w-full h-3 ${isDarkMode ? 'bg-[#333]' : 'bg-gray-100'} rounded-full overflow-hidden`}>
+                      <p className="text-[13px] text-gray-400 mb-3">Countdown: <b>61 Days Left</b></p>
+                      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full bg-indigo-600 rounded-full" style={{ width: '65%' }}></div>
                       </div>
                     </div>
@@ -1124,12 +915,8 @@ export default function DirectorDashboard() {
                         <h4 className="font-bold text-[15px]">Family Vacation (Goa Coastal Retreat)</h4>
                         <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-[11px] rounded-full">Dec 20, 2026</span>
                       </div>
-                      <p className="text-[13px] text-gray-400 mb-3">Countdown: <b>114 Days Left</b></p>
-                      <div className="flex justify-between text-[12.5px] font-semibold mb-1 text-gray-400">
-                        <span>Booking & Itinerary Progress</span>
-                        <span>40%</span>
-                      </div>
-                      <div className={`w-full h-3 ${isDarkMode ? 'bg-[#333]' : 'bg-gray-100'} rounded-full overflow-hidden`}>
+                      <p className="text-[13px] text-gray-400 mb-3">Countdown: <b>110 Days Left</b></p>
+                      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
                         <div className="h-full bg-emerald-600 rounded-full" style={{ width: '40%' }}></div>
                       </div>
                     </div>
@@ -1142,7 +929,6 @@ export default function DirectorDashboard() {
                     <span>💡</span> Creative Brainstorming Ideas Input
                   </h3>
                   <p className="text-[13.5px] text-gray-400 mb-4">Capture unstructured strategic thoughts, innovation ideas, or process optimization notes for MDI Private Limited.</p>
-                  
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input 
                       type="text"
@@ -1151,112 +937,14 @@ export default function DirectorDashboard() {
                       placeholder="Type a creative brainstorming thought..."
                       className={`flex-1 p-3.5 ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} border rounded-2xl text-[14px] outline-none transition`}
                     />
-                    <button 
-                      onClick={() => {
-                        if (brainstormInput.trim()) {
-                          triggerToast("💡 Brainstorm idea logged securely to AI Strategy Vault!");
-                          setBrainstormInput('');
-                        } else {
-                          triggerToast("Please type an idea before submitting.");
-                        }
-                      }}
-                      className="px-6 py-3.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold text-[14px] cursor-pointer transition shadow-md shadow-[#af2024]/20 shrink-0"
-                    >
+                    <button onClick={() => { if (brainstormInput.trim()) { triggerToast("💡 Brainstorm idea logged securely!"); setBrainstormInput(''); } }} className="px-6 py-3.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold text-[14px] cursor-pointer transition shadow-md shrink-0">
                       Log Idea 🚀
                     </button>
                   </div>
                 </div>
 
-                {/* Send Command Section & AI Recommended Meetings */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition`}>
-                    <h3 className="text-[17px] font-bold mb-4 flex items-center gap-2.5">
-                      <span className="text-[#af2024]">{IconOutlined.clipboard}</span> Send Command to Person or Team
-                    </h3>
-                    <div className="flex flex-col gap-3.5 text-[14px]">
-                      <div>
-                        <label className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Select Recipient Team / Person</label>
-                        <select 
-                          value={commandRecipient} 
-                          onChange={(e) => setCommandRecipient(e.target.value)}
-                          className={`w-full p-3 ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} border rounded-2xl font-semibold outline-none transition`}
-                        >
-                          <option>Project Manager (NH-66)</option>
-                          <option>Billing Team (Kolhapur HQ)</option>
-                          <option>Fleet Manager (Shinde)</option>
-                          <option>Safety Supervisor</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Command Instructions / Voice Note</label>
-                        <div className="flex gap-2.5">
-                          <input 
-                            type="text" 
-                            value={commandText}
-                            onChange={(e) => setCommandText(e.target.value)}
-                            placeholder="Type command or click mic..."
-                            className={`w-full p-3 ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} border rounded-2xl outline-none font-normal transition`}
-                          />
-                          <button 
-                            onClick={() => setShowVoiceModal(true)} 
-                            className="px-4 py-3 rounded-2xl text-white font-semibold cursor-pointer shrink-0 bg-[#1e1e1e] hover:bg-[#af2024] transition shadow-sm border border-white/10"
-                            title="Voice Command Input"
-                          >
-                            {IconOutlined.mic}
-                          </button>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          triggerToast(`Command successfully dispatched to ${commandRecipient}!`);
-                          setCommandText('');
-                        }}
-                        className="py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold cursor-pointer transition shadow-md shadow-[#af2024]/20"
-                      >
-                        Dispatch Command Now ⚡
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition`}>
-                    <h3 className="text-[17px] font-bold mb-4 flex items-center gap-2.5">
-                      <span className="text-[#af2024]">{IconOutlined.calendar}</span> AI Recommended Meetings & Site Visits
-                    </h3>
-                    <div className="flex flex-col gap-3.5">
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center text-[14px] gap-2 shadow-xs`}>
-                        <div>
-                          <div className="font-bold">Site Visit: SH-12 Ring Road Sub-base Inspection</div>
-                          <div className="text-[12.5px] text-gray-400 font-medium mt-0.5">Today @ 3:30 PM • AI Telemetry Recommendation</div>
-                        </div>
-                        <button onClick={() => triggerToast("AI site visit accepted & added to calendar!")} className="px-4 py-2 glass-button rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">Accept</button>
-                      </div>
-                      <div className={`p-4 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} border rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center text-[14px] gap-2 shadow-xs`}>
-                        <div>
-                          <div className="font-bold">Meeting: Vendor Payment Review with CFO</div>
-                          <div className="text-[12.5px] text-gray-400 font-medium mt-0.5">Tomorrow @ 10:00 AM • High Priority</div>
-                        </div>
-                        <button onClick={() => triggerToast("Meeting scheduled with CFO!")} className="px-4 py-2 glass-button rounded-xl text-[12.5px] font-semibold cursor-pointer transition shadow-sm shrink-0">Schedule</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             )
-          )}
-
-          {activeTab !== 'command' && !selectedSite && (
-            <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-10 text-center flex flex-col items-center justify-center min-h-[400px] shadow-sm android-slide-enter`}>
-              <div className="text-[48px] mb-4 animate-bounce">🛠️</div>
-              <h3 className="text-[20px] font-bold capitalize">{activeTab.replace(/([A-Z])/g, ' $1')} Module Under Development</h3>
-              <p className="text-[14px] text-gray-400 mt-2">This dedicated module is currently being configured for MDI Private Limited.</p>
-              <button 
-                onClick={() => setActiveTab('command')}
-                className="mt-6 px-5 py-3 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl text-[14px] font-semibold cursor-pointer transition shadow-lg shadow-[#af2024]/20"
-              >
-                Return to Command Centre
-              </button>
-            </div>
           )}
         </div>
       </main>
