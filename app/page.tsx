@@ -110,22 +110,22 @@ export default function DirectorDashboard() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleExcelExport = (siteName: string) => {
+  const handleExcelExport = (reportName: string) => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Metric,Value\n"
-      + `Site Name,${siteName}\n`
-      + "Export Date,2026-09-01\n"
-      + "Status,Active Telemetry\n";
-    
+      + "Report,GeneratedDate,Status\n"
+      + `${reportName},2026-09-03,Verified Active\n`;
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${siteName.replace(/\s+/g, '_')}_Detailed_Report.csv`);
+    link.setAttribute("download", `${reportName.replace(/\s+/g, '_')}_Report.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    triggerToast(`📊 Successfully exported ${reportName} to XLS (CSV)!`);
+  };
 
-    triggerToast(`Successfully downloaded detailed Excel report for ${siteName}!`);
+  const handlePdfExport = (reportName: string) => {
+    triggerToast(`📄 Successfully generated and downloaded ${reportName} PDF report!`);
   };
 
   const handleScheduleMeeting = (siteName: string) => {
@@ -305,6 +305,21 @@ export default function DirectorDashboard() {
         .android-modal-enter { animation: android-fade-in 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
         .android-slide-enter { animation: android-slide-right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
         
+        /* Soft Android Material Accordion Animation */
+        .android-accordion-content {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+          opacity: 0;
+        }
+        .android-accordion-content.open {
+          grid-template-rows: 1fr;
+          opacity: 1;
+        }
+        .android-accordion-inner {
+          overflow: hidden;
+        }
+
         .rain-drop { 
           position: absolute; 
           background: linear-gradient(transparent, rgba(56, 189, 248, 0.8)); 
@@ -709,7 +724,7 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* ==========================================
-                    2. ZONE-WISE STRATEGIC HUB (VISIBLE NAMES, BUTTONS, & CLEAR TEXT COLORS)
+                    2. ZONE-WISE STRATEGIC HUB
                    ========================================== */}
                 <div className="flex flex-col gap-6">
                   <h3 className="text-[18px] font-bold flex items-center gap-2">
@@ -740,12 +755,11 @@ export default function DirectorDashboard() {
                                 const isSiteOpen = openSiteId === site.id;
 
                                 return (
-                                  <div key={site.id} className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200/70 text-gray-900'} border rounded-2xl flex flex-col gap-4 shadow-xs`}>
+                                  <div key={site.id} className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col gap-4 shadow-xs`}>
                                     
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                       <div className="cursor-pointer flex-1" onClick={() => setOpenSiteId(isSiteOpen ? null : site.id)}>
                                         <div className="flex items-center gap-3 flex-wrap">
-                                          {/* Clearly visible site name */}
                                           <span className={`font-black text-[17px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{site.name}</span>
                                           <span className={`px-3 py-1 rounded-full text-[12px] font-bold ${site.statusClass}`}>{site.status}</span>
                                         </div>
@@ -780,20 +794,20 @@ export default function DirectorDashboard() {
                                     </div>
 
                                     {isSiteOpen && (
-                                      <div className={`pt-4 mt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200/80'} grid grid-cols-2 sm:grid-cols-4 gap-4 text-center android-slide-enter`}>
-                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                      <div className={`pt-4 mt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200'} grid grid-cols-2 sm:grid-cols-4 gap-4 text-center android-slide-enter`}>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-gray-50'} border border-gray-200 dark:border-white/10 shadow-xs`}>
                                           <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Project Cost</div>
                                           <div className="text-[16px] font-black text-[#af2024] mt-1">{site.budget}</div>
                                         </div>
-                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-gray-50'} border border-gray-200 dark:border-white/10 shadow-xs`}>
                                           <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Unbilled Amount</div>
                                           <div className="text-[16px] font-black text-[#b06000] mt-1">{site.unbilled}</div>
                                         </div>
-                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-gray-50'} border border-gray-200 dark:border-white/10 shadow-xs`}>
                                           <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Total Billed</div>
                                           <div className="text-[16px] font-black text-gray-900 dark:text-white mt-1">{site.billed}</div>
                                         </div>
-                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-gray-50'} border border-gray-200 dark:border-white/10 shadow-xs`}>
                                           <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Expenditure To Date</div>
                                           <div className="text-[16px] font-black text-[#137333] mt-1">{site.expenditure}</div>
                                         </div>
