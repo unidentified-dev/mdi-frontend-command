@@ -38,6 +38,10 @@ export default function DirectorDashboard() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [brainstormInput, setBrainstormInput] = useState('');
+  
+  // Command Dispatch State
+  const [commandRecipient, setCommandRecipient] = useState('Project Manager (NH-66)');
+  const [commandText, setCommandText] = useState('');
 
   // Departmental Approvals State
   const [departmentApprovals, setDepartmentApprovals] = useState([
@@ -210,10 +214,9 @@ export default function DirectorDashboard() {
       name: "NH-66 Greenfield Bypass",
       type: "Package 2 • National Highway",
       status: "On Track",
-      statusBadgeColor: "bg-emerald-500 text-white",
-      statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400" : "bg-[#e6f4ea] text-[#137333]",
+      risk: "profitable",
+      statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400 font-bold" : "bg-[#e6f4ea] text-[#137333] font-bold",
       progress: 76,
-      boqProgress: 82,
       budget: "₹240.0 Cr",
       startDate: "Jan 2024",
       endDate: "Mar 2027",
@@ -230,10 +233,9 @@ export default function DirectorDashboard() {
       name: "SH-12 Ring Road Expansion",
       type: "State Highway Corridor",
       status: "Moderate Risk",
-      statusBadgeColor: "bg-amber-500 text-white",
-      statusClass: isDarkMode ? "bg-amber-950/60 text-amber-400" : "bg-[#fef7e0] text-[#b06000]",
+      risk: "moderate",
+      statusClass: isDarkMode ? "bg-amber-950/60 text-amber-400 font-bold" : "bg-[#fef7e0] text-[#b06000] font-bold",
       progress: 61,
-      boqProgress: 58,
       budget: "₹150.0 Cr",
       startDate: "May 2024",
       endDate: "Jun 2027",
@@ -250,10 +252,9 @@ export default function DirectorDashboard() {
       name: "Expressway Flyover Sec IV",
       type: "Urban Elevated Structure",
       status: "On Track",
-      statusBadgeColor: "bg-emerald-500 text-white",
-      statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400" : "bg-[#e6f4ea] text-[#137333]",
+      risk: "profitable",
+      statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400 font-bold" : "bg-[#e6f4ea] text-[#137333] font-bold",
       progress: 29,
-      boqProgress: 35,
       budget: "₹120.0 Cr",
       startDate: "Aug 2024",
       endDate: "Dec 2027",
@@ -269,11 +270,10 @@ export default function DirectorDashboard() {
       zone: "North Zone",
       name: "Mumbai-Nashik Expressway Corridor",
       type: "High-Speed Freight Corridor",
-      status: "Critical Loss",
-      statusBadgeColor: "bg-red-600 text-white",
-      statusClass: isDarkMode ? "bg-red-950/60 text-red-400" : "bg-red-100 text-red-800",
+      status: "On Track",
+      risk: "profitable",
+      statusClass: isDarkMode ? "bg-emerald-950/60 text-emerald-400 font-bold" : "bg-[#e6f4ea] text-[#137333] font-bold",
       progress: 48,
-      boqProgress: 50,
       budget: "₹180.0 Cr",
       startDate: "Feb 2024",
       endDate: "Jan 2028",
@@ -293,20 +293,32 @@ export default function DirectorDashboard() {
         body { font-family: 'Inter', sans-serif; }
         
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        @keyframes continuous-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes android-fade-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes android-slide-right { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes rainfall { 0% { transform: translateY(-20px); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: translateY(180px); opacity: 0; } }
-        @keyframes chart-draw { from { stroke-dasharray: 0 1000; } to { stroke-dasharray: 1000 0; } }
+        @keyframes gradient-border-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes green-gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
         .animate-marquee { display: inline-block; animation: marquee 25s linear infinite; }
-        .animate-spin-badge { animation: continuous-spin 6s linear infinite; }
-        .animate-chart { animation: chart-draw 1.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
         .android-card-transition { transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .android-card-transition:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -10px rgba(0,0,0,0.12); }
         .android-modal-enter { animation: android-fade-in 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
         .android-slide-enter { animation: android-slide-right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
-        .rain-drop { position: absolute; background: linear-gradient(transparent, rgba(56, 189, 248, 0.8)); width: 1.5px; height: 16px; opacity: 0.7; animation: rainfall linear infinite; }
+        
+        .rain-drop { 
+          position: absolute; 
+          background: linear-gradient(transparent, rgba(56, 189, 248, 0.8)); 
+          width: 1.5px; 
+          height: 16px; 
+          opacity: 0.7; 
+          animation: rainfall linear infinite; 
+        }
+
+        .green-animated-progress {
+          background: linear-gradient(270deg, #10b981, #059669, #34d399, #047857);
+          background-size: 300% 300%;
+          animation: green-gradient-flow 4s ease infinite;
+        }
 
         .glass-button {
           background: ${isDarkMode ? 'rgba(30, 30, 30, 0.75)' : 'rgba(255, 255, 255, 0.65)'};
@@ -320,15 +332,6 @@ export default function DirectorDashboard() {
           border-color: ${isDarkMode ? 'rgba(255, 255, 255, 0.25)' : 'rgba(130, 140, 160, 0.8)'};
           transform: translateY(-1px);
         }
-
-        .glass-progress {
-          background: ${isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.05)'};
-          backdrop-filter: blur(8px);
-          border: 1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'};
-        }
-
-        .hover-actions { opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; transform: translateY(4px); }
-        .group:hover .hover-actions { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
         .animated-gradient-border-profitable {
           background: linear-gradient(60deg, #137333, #ffffff, #34a853, #ffffff, #137333);
@@ -348,7 +351,7 @@ export default function DirectorDashboard() {
         </div>
       )}
 
-      {/* AI Action Popup Modal */}
+      {/* AI Recommendation Action Popup Modal */}
       {aiPopupSite && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all">
           <div className={`${isDarkMode ? 'bg-[#1e1e1e] text-white border-white/10' : 'bg-white text-gray-900 border-gray-100'} rounded-[28px] max-w-lg w-full p-7 shadow-2xl android-modal-enter border`}>
@@ -445,7 +448,7 @@ export default function DirectorDashboard() {
             {menuItems.map((item) => (
               <li 
                 key={item.id}
-                onClick={() => { setActiveTab(item.id); setSelectedSite(null); setIsMobileMenuOpen(false); triggerToast(`Mapsd to ${item.name} Module`); }}
+                onClick={() => { setActiveTab(item.id); setSelectedSite(null); setIsMobileMenuOpen(false); triggerToast(`Navigated to ${item.name} Module`); }}
                 className={`flex items-center gap-3.5 p-3 rounded-2xl text-[14px] font-semibold cursor-pointer transition-all ${activeTab === item.id && !selectedSite ? 'bg-[#af2024] text-white shadow-lg shadow-[#af2024]/20 scale-[1.02]' : isDarkMode ? 'text-gray-300 hover:bg-white/5 hover:text-[#af2024]' : 'text-gray-600 hover:bg-gray-50 hover:text-[#af2024]'}`}
                 title={isSidebarCollapsed && !isMobileMenuOpen ? item.name : ''}
               >
@@ -576,124 +579,137 @@ export default function DirectorDashboard() {
                 </div>
 
                 {/* ==========================================
-                    1. CONSOLIDATED DASHBOARD WITH PLAIN PIE-CHART, PERCENTAGES INSIDE, AND SITE STATUS LIST
+                    1. CONSOLIDATED FINANCIAL & EXPENSE DASHBOARD (1 TOP CARD + 3 WHITE SUB-CARDS WITH DECENT BORDERS)
                    ========================================== */}
-                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-8 shadow-sm android-card-transition`}>
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                    <h3 className="text-[19px] font-bold flex items-center gap-2.5">
+                <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition`}>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h3 className="text-[18px] font-bold flex items-center gap-2">
                       <span>📈</span> Consolidated Enterprise Financial & Expense Dashboard
                     </h3>
-                    <div className={`flex p-1.5 rounded-2xl ${isDarkMode ? 'bg-[#222]' : 'bg-gray-100'}`}>
+                    <div className={`flex p-1 rounded-2xl ${isDarkMode ? 'bg-[#222]' : 'bg-gray-100'}`}>
                       <button 
                         onClick={() => setConsolidatedTab('financial')}
-                        className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition cursor-pointer ${consolidatedTab === 'financial' ? 'bg-[#af2024] text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}
+                        className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer ${consolidatedTab === 'financial' ? 'bg-[#af2024] text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}
                       >
                         Financial Report
                       </button>
                       <button 
                         onClick={() => setConsolidatedTab('boq')}
-                        className={`px-6 py-2.5 rounded-xl text-[14px] font-bold transition cursor-pointer ${consolidatedTab === 'boq' ? 'bg-[#af2024] text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}
+                        className={`px-4 py-2 rounded-xl text-[13px] font-bold transition cursor-pointer ${consolidatedTab === 'boq' ? 'bg-[#af2024] text-white shadow-md' : 'text-gray-400 hover:text-gray-200'}`}
                       >
                         BOQ Report
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                    {/* Metrics column with verified legibility (including Total Billed) */}
-                    <div className="lg:col-span-4 flex flex-col gap-4">
-                      {consolidatedTab === 'financial' ? (
-                        <>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Total Project Cost</span><div className="text-2xl font-extrabold text-[#af2024] mt-0.5">₹510.0 Cr</div></div>
-                            <span className="w-4 h-4 rounded-full bg-[#af2024] shadow-sm"></span>
-                          </div>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Expenditure Date</span><div className="text-2xl font-extrabold text-[#b06000] mt-0.5">₹415.0 Cr</div></div>
-                            <span className="w-4 h-4 rounded-full bg-[#b06000] shadow-sm"></span>
-                          </div>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Unbilled Amount</span><div className="text-2xl font-extrabold text-amber-600 mt-0.5">₹42.8 Cr</div></div>
-                            <span className="w-4 h-4 rounded-full bg-amber-500 shadow-sm"></span>
-                          </div>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Total Billed Amount</span><div className="text-2xl font-extrabold text-[#137333] mt-0.5">₹363.2 Cr</div></div>
-                            <span className="w-4 h-4 rounded-full bg-[#137333] shadow-sm"></span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Earthwork & Embankment</span><div className="text-2xl font-extrabold text-[#137333] mt-0.5">88% Done</div></div>
-                          </div>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Structures & Piling</span><div className="text-2xl font-extrabold text-sky-600 mt-0.5">74% Done</div></div>
-                          </div>
-                          <div className="p-4 bg-gray-50/50 border border-gray-200/60 rounded-2xl flex justify-between items-center shadow-xs">
-                            <div><span className="text-[12px] text-gray-500 font-bold uppercase">Bituminous Paving DBM/BC</span><div className="text-2xl font-extrabold text-[#b06000] mt-0.5">62% Done</div></div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Plain, Uncropped Pie Chart with Percentage Written Inside */}
-                    <div className="lg:col-span-4 flex justify-center items-center relative py-6">
-                      <div className="relative p-3 rounded-full">
-                        <svg className="w-72 h-72 transform -rotate-90 animate-chart overflow-visible" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke={isDarkMode ? '#252525' : '#e2e8f0'} strokeWidth="5"></circle>
-                          {consolidatedTab === 'financial' ? (
-                            <>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#10b981" strokeWidth="5" strokeDasharray="50 50" strokeDashoffset="0"></circle>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f59e0b" strokeWidth="5" strokeDasharray="30 70" strokeDashoffset="-50"></circle>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#3b82f6" strokeWidth="5" strokeDasharray="10 90" strokeDashoffset="-80"></circle>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#ef4444" strokeWidth="5" strokeDasharray="10 90" strokeDashoffset="-90"></circle>
-                            </>
-                          ) : (
-                            <>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#10b981" strokeWidth="5" strokeDasharray="45 55" strokeDashoffset="0"></circle>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#0284c7" strokeWidth="5" strokeDasharray="30 70" strokeDashoffset="-45"></circle>
-                              <circle cx="18" cy="18" r="15.91549430918954" fill="transparent" stroke="#f59e0b" strokeWidth="5" strokeDasharray="25 75" strokeDashoffset="-75"></circle>
-                            </>
-                          )}
-                        </svg>
-
-                        {/* Percentage written inside the plain pie chart */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                          <span className="text-3xl font-black tracking-tight">{consolidatedTab === 'financial' ? '50%' : '45%'}</span>
-                          <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">{consolidatedTab === 'financial' ? 'Billed Share' : 'Earthwork'}</span>
+                  {consolidatedTab === 'financial' ? (
+                    <div>
+                      {/* Top Card for Total Turnover */}
+                      <div className="mb-5 p-5 bg-gradient-to-br from-[#af2024]/10 via-[#af2024]/5 to-transparent border border-[#af2024]/30 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
+                        <div>
+                          <span className="text-[11.5px] text-gray-500 font-bold uppercase tracking-wider">Total Enterprise Turnover / Project Cost</span>
+                          <div className="text-[30px] sm:text-[34px] font-black text-[#af2024] mt-1">₹510.0 Cr</div>
+                        </div>
+                        <div className="px-3.5 py-1.5 bg-[#af2024]/15 text-[#af2024] font-bold text-[12px] rounded-xl border border-[#af2024]/30">
+                          ↗ Fully Mobilized & Funded
                         </div>
                       </div>
-                    </div>
 
-                    {/* Site Status List (Replacing Map) */}
-                    <div className={`lg:col-span-4 rounded-2xl p-6 flex flex-col justify-between ${isDarkMode ? 'bg-[#222]/80 border-white/5' : 'bg-gray-50 border-gray-200/60'} border h-80 overflow-y-auto shadow-inner`}>
-                      <div className="text-[12px] font-bold uppercase tracking-wider text-gray-400 mb-4">
-                        🏢 Strategic Sites Status ({consolidatedTab === 'financial' ? 'Profitability' : 'BOQ Progress'})
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        {allSites.map((site) => (
-                          <div 
-                            key={site.id}
-                            onClick={() => setSelectedSite(site)}
-                            className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#1a1a1a] hover:bg-[#2a2a2a]' : 'bg-white hover:bg-gray-100'} border border-gray-200/50 flex items-center justify-between cursor-pointer transition shadow-xs`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="w-4 h-4 rounded-full shadow-sm shrink-0" style={{ backgroundColor: site.riskColor }}></span>
-                              <span className={`font-extrabold text-[14px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{site.name}</span>
-                            </div>
-                            <span className={`px-2.5 py-1 rounded-md text-[11.5px] font-extrabold ${site.statusBadgeColor}`}>
-                              {site.status}
-                            </span>
+                      {/* Three Sub-Cards Below: White with decent border */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/15 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col justify-between shadow-xs android-card-transition`}>
+                          <div>
+                            <span className="text-[12px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Expenditure Until Date</span>
+                            <div className="text-[26px] font-black text-[#b06000] mt-2">₹415.0 Cr</div>
                           </div>
-                        ))}
+                          <div className="mt-4 pt-3 border-t border-gray-200 dark:border-white/10 flex justify-between items-center text-[12px] font-semibold text-gray-500">
+                            <span>81.3% Utilized</span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#b06000]"></span>
+                          </div>
+                        </div>
+
+                        <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/15 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col justify-between shadow-xs android-card-transition`}>
+                          <div>
+                            <span className="text-[12px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Total Billed Amount</span>
+                            <div className="text-[26px] font-black text-[#137333] mt-2">₹363.2 Cr</div>
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-gray-200 dark:border-white/10 flex justify-between items-center text-[12px] font-semibold text-gray-500">
+                            <span>71.2% Realized</span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#137333]"></span>
+                          </div>
+                        </div>
+
+                        <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/15 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col justify-between shadow-xs android-card-transition`}>
+                          <div>
+                            <span className="text-[12px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Total Unbilled Amount</span>
+                            <div className="text-[26px] font-black text-amber-500 mt-2">₹42.8 Cr</div>
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-gray-200 dark:border-white/10 flex justify-between items-center text-[12px] font-semibold text-gray-500">
+                            <span>Pending JMR</span>
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Export Buttons */}
+                      <div className="flex items-center justify-end gap-3 pt-4">
+                        <button onClick={() => handleExcelExport("Financial_Report")} className="px-4 py-2 glass-button rounded-full text-[12.5px] font-semibold cursor-pointer transition flex items-center gap-1.5 shadow-2xs">
+                          📊 Export XLS
+                        </button>
+                        <button onClick={() => handlePdfExport("Financial_Report")} className="px-4 py-2 bg-[#af2024] hover:bg-[#92191d] text-white rounded-full text-[12.5px] font-semibold cursor-pointer transition shadow-2xs flex items-center gap-1.5">
+                          📄 Export PDF
+                        </button>
                       </div>
                     </div>
+                  ) : (
+                    <div className="flex flex-col gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                        <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/15 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col justify-between shadow-xs`}>
+                          <div>
+                            <span className="text-[12px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Earthwork & Embankment</span>
+                            <div className="text-[26px] font-black text-[#137333] mt-2">88% Done</div>
+                          </div>
+                          <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-4">
+                            <div className="h-full green-animated-progress rounded-full" style={{ width: '88%' }}></div>
+                          </div>
+                        </div>
 
-                  </div>
+                        <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/15 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col justify-between shadow-xs`}>
+                          <div>
+                            <span className="text-[12px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Structures & Piling</span>
+                            <div className="text-[26px] font-black text-sky-500 mt-2">74% Done</div>
+                          </div>
+                          <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-4">
+                            <div className="h-full green-animated-progress rounded-full" style={{ width: '74%' }}></div>
+                          </div>
+                        </div>
+
+                        <div className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/15 text-white' : 'bg-white border-gray-300 text-gray-900'} border rounded-2xl flex flex-col justify-between shadow-xs`}>
+                          <div>
+                            <span className="text-[12px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Bituminous Paving DBM/BC</span>
+                            <div className="text-[26px] font-black text-[#b06000] mt-2">62% Done</div>
+                          </div>
+                          <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-4">
+                            <div className="h-full green-animated-progress rounded-full" style={{ width: '62%' }}></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Export Buttons */}
+                      <div className="flex items-center justify-end gap-3 pt-4">
+                        <button onClick={() => handleExcelExport("BOQ_Report")} className="px-4 py-2 glass-button rounded-full text-[12.5px] font-semibold cursor-pointer transition flex items-center gap-1.5 shadow-2xs">
+                          📊 Export XLS
+                        </button>
+                        <button onClick={() => handlePdfExport("BOQ_Report")} className="px-4 py-2 bg-[#af2024] hover:bg-[#92191d] text-white rounded-full text-[12.5px] font-semibold cursor-pointer transition shadow-2xs flex items-center gap-1.5">
+                          📄 Export PDF
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* ==========================================
-                    2. ZONE-WISE STRATEGIC HUB (VERTICAL ACCORDIONS WITH ENLARGED NUMBERS & HIGH-CONTRAST NAMES)
+                    2. ZONE-WISE STRATEGIC HUB (VISIBLE NAMES, BUTTONS, & CLEAR TEXT COLORS)
                    ========================================== */}
                 <div className="flex flex-col gap-6">
                   <h3 className="text-[18px] font-bold flex items-center gap-2">
@@ -708,83 +724,78 @@ export default function DirectorDashboard() {
                       <div key={zoneName} className={`animated-gradient-border-${zoneName === 'South Zone' ? 'profitable' : 'moderate'} rounded-[28px] shadow-sm`}>
                         <div className={`${isDarkMode ? 'bg-[#181818]' : 'bg-white'} rounded-[27px] p-6`}>
                           
-                          {/* Zone Accordion Header */}
-                          <div onClick={() => setOpenZone(isZoneOpen ? null : zoneName)} className="flex justify-between items-center cursor-pointer pb-2">
+                          <div 
+                            onClick={() => setOpenZone(isZoneOpen ? null : zoneName)}
+                            className="flex justify-between items-center cursor-pointer pb-2"
+                          >
                             <h4 className="text-[18px] font-bold flex items-center gap-2.5">
                               <span>🌐</span> {zoneName} Hub ({zoneSites.length} Sites Active)
                             </h4>
                             <span className="text-xl font-bold text-gray-400">{isZoneOpen ? '▲' : '▼'}</span>
                           </div>
 
-                          {/* Zone Content */}
                           {isZoneOpen && (
                             <div className="mt-5 flex flex-col gap-4 animate-fadeIn">
                               {zoneSites.map((site) => {
                                 const isSiteOpen = openSiteId === site.id;
 
                                 return (
-                                  <div key={site.id} className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/70'} border rounded-2xl flex flex-col gap-4 shadow-xs`}>
+                                  <div key={site.id} className={`p-5 ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200/70 text-gray-900'} border rounded-2xl flex flex-col gap-4 shadow-xs`}>
                                     
-                                    {/* Site Brief Header with High-Contrast Bold Name */}
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                       <div className="cursor-pointer flex-1" onClick={() => setOpenSiteId(isSiteOpen ? null : site.id)}>
                                         <div className="flex items-center gap-3 flex-wrap">
-                                          <span className={`font-extrabold text-lg ${isDarkMode ? 'text-white' : 'text-[#0f172a]'}`}>{site.name}</span>
+                                          {/* Clearly visible site name */}
+                                          <span className={`font-black text-[17px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{site.name}</span>
                                           <span className={`px-3 py-1 rounded-full text-[12px] font-bold ${site.statusClass}`}>{site.status}</span>
                                         </div>
-                                        <div className="text-[13.5px] text-gray-400 mt-1">
-                                          Cost: <b>{site.budget}</b> • Timeline: {site.startDate} to {site.endDate}
+                                        <div className={`text-[13.5px] font-bold mt-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                          Cost: <b className={isDarkMode ? 'text-white' : 'text-gray-900'}>{site.budget}</b> • Timeline: {site.startDate} to {site.endDate}
                                         </div>
-
-                                        {/* Dual Glassmorphism Progress Bars */}
-                                        <div className="flex flex-col gap-1.5 mt-3 w-full sm:w-96">
-                                          <div className="flex justify-between text-[11px] font-bold text-gray-400">
-                                            <span>Timeline Progress ({site.progress}%)</span>
-                                            <span>BOQ Completed ({site.boqProgress}%)</span>
-                                          </div>
-                                          <div className="flex gap-2 w-full">
-                                            <div className="flex-1 h-3 glass-progress rounded-full overflow-hidden">
-                                              <div className="h-full bg-[#af2024] rounded-full" style={{ width: `${site.progress}%` }}></div>
-                                            </div>
-                                            <div className="flex-1 h-3 glass-progress rounded-full overflow-hidden">
-                                              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${site.boqProgress}%` }}></div>
-                                            </div>
-                                          </div>
+                                        <div className="w-full sm:w-72 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-3">
+                                          <div className="h-full green-animated-progress rounded-full" style={{ width: `${site.progress}%` }}></div>
                                         </div>
                                       </div>
 
-                                      {/* Action Buttons */}
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <button onClick={() => setAiPopupSite(site)} className="px-3.5 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 rounded-xl text-[12.5px] font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                      <div className="flex items-center gap-2.5 flex-wrap">
+                                        <button 
+                                          onClick={() => setAiPopupSite(site)}
+                                          className="px-3.5 py-2 bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 rounded-xl text-[12.5px] font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                        >
                                           <span>✨</span> AI Action
                                         </button>
-                                        <button onClick={() => triggerToast(`🚨 SOS Initiated! Connecting with Project Manager ${site.contacts.pm}...`)} className="px-3.5 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl text-[12.5px] font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                        <button 
+                                          onClick={() => triggerToast(`🚨 SOS Initiated! Connecting with Project Manager ${site.contacts.pm}...`)}
+                                          className="px-3.5 py-2 bg-red-500/15 hover:bg-red-500/25 text-red-700 dark:text-red-300 border border-red-500/30 rounded-xl text-[12.5px] font-extrabold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                                        >
                                           <span>{IconOutlined.sos}</span> SOS
                                         </button>
-                                        <button onClick={() => setSelectedSite(site)} className="px-4 py-2 glass-button rounded-xl text-[12.5px] font-semibold transition cursor-pointer">
+                                        <button 
+                                          onClick={() => setSelectedSite(site)}
+                                          className={`px-4 py-2 rounded-xl text-[12.5px] font-extrabold transition cursor-pointer shadow-xs ${isDarkMode ? 'bg-[#333] text-white border border-white/20 hover:bg-[#444]' : 'bg-gray-900 text-white hover:bg-black'}`}
+                                        >
                                           Check Details →
                                         </button>
                                       </div>
                                     </div>
 
-                                    {/* Detailed Sub-Accordion Content with Enlarged Numbers */}
                                     {isSiteOpen && (
                                       <div className={`pt-4 mt-2 border-t ${isDarkMode ? 'border-white/10' : 'border-gray-200/80'} grid grid-cols-2 sm:grid-cols-4 gap-4 text-center android-slide-enter`}>
-                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
-                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Project Cost</div>
-                                          <div className="text-[18px] font-extrabold text-[#af2024] mt-1">{site.budget}</div>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Project Cost</div>
+                                          <div className="text-[16px] font-black text-[#af2024] mt-1">{site.budget}</div>
                                         </div>
-                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
-                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Unbilled Amount</div>
-                                          <div className="text-[18px] font-extrabold text-[#b06000] mt-1">{site.unbilled}</div>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Unbilled Amount</div>
+                                          <div className="text-[16px] font-black text-[#b06000] mt-1">{site.unbilled}</div>
                                         </div>
-                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
-                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Total Billed</div>
-                                          <div className="text-[18px] font-extrabold text-gray-900 dark:text-white mt-1">{site.billed}</div>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Total Billed</div>
+                                          <div className="text-[16px] font-black text-gray-900 dark:text-white mt-1">{site.billed}</div>
                                         </div>
-                                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200/50 shadow-xs`}>
-                                          <div className="text-[11.5px] text-gray-400 uppercase font-bold">Expenditure To Date</div>
-                                          <div className="text-[18px] font-extrabold text-[#137333] mt-1">{site.expenditure}</div>
+                                        <div className={`p-3.5 rounded-xl ${isDarkMode ? 'bg-[#181818]' : 'bg-white'} border border-gray-200 dark:border-white/10 shadow-xs`}>
+                                          <div className="text-[11.5px] text-gray-500 dark:text-gray-400 uppercase font-extrabold">Expenditure To Date</div>
+                                          <div className="text-[16px] font-black text-[#137333] mt-1">{site.expenditure}</div>
                                         </div>
                                       </div>
                                     )}
@@ -940,6 +951,106 @@ export default function DirectorDashboard() {
                     <button onClick={() => { if (brainstormInput.trim()) { triggerToast("💡 Brainstorm idea logged securely!"); setBrainstormInput(''); } }} className="px-6 py-3.5 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold text-[14px] cursor-pointer transition shadow-md shrink-0">
                       Log Idea 🚀
                     </button>
+                  </div>
+                </div>
+
+                {/* ==========================================
+                    3. COMMAND DISPATCH & AI RECOMMENDED MEETINGS
+                   ========================================== */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition flex flex-col justify-between`}>
+                    <div>
+                      <h3 className="text-[17px] font-bold mb-4 flex items-center gap-2.5">
+                        <span className="text-[#af2024]">{IconOutlined.lightning}</span> Send Command to Person or Team
+                      </h3>
+                      
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <label className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Select Recipient Team / Person</label>
+                          <select 
+                            value={commandRecipient}
+                            onChange={(e) => setCommandRecipient(e.target.value)}
+                            className={`w-full p-3.5 rounded-2xl border ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} text-[14px] font-medium outline-none transition cursor-pointer`}
+                          >
+                            <option>Project Manager (NH-66)</option>
+                            <option>Chief Engineer (SH-12)</option>
+                            <option>Fleet Manager (Kolhapur Yard)</option>
+                            <option>Safety Head (Expressway Sec IV)</option>
+                            <option>Accounts & Audit Lead</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[11.5px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Command Instructions / Voice Note</label>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="text"
+                              value={commandText}
+                              onChange={(e) => setCommandText(e.target.value)}
+                              placeholder="Type command or click mic..."
+                              className={`flex-1 p-3.5 rounded-2xl border ${isDarkMode ? 'bg-[#222] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} text-[14px] outline-none transition`}
+                            />
+                            <button 
+                              onClick={() => triggerToast("🎤 Voice recording active. Speak command...")}
+                              className="w-12 h-12 rounded-2xl bg-[#1e1e1e] text-white flex items-center justify-center shrink-0 cursor-pointer shadow-md hover:bg-black transition"
+                              title="Voice Dictation"
+                            >
+                              {IconOutlined.mic}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        triggerToast(`⚡ Command successfully dispatched to ${commandRecipient}!`);
+                        setCommandText('');
+                      }} 
+                      className="w-full mt-6 py-4 bg-[#af2024] hover:bg-[#92191d] text-white rounded-2xl font-bold text-[14.5px] cursor-pointer transition shadow-lg shadow-[#af2024]/20 flex items-center justify-center gap-2"
+                    >
+                      <span>Dispatch Command Now</span> ⚡
+                    </button>
+                  </div>
+
+                  <div className={`${isDarkMode ? 'bg-[#181818] border-white/10' : 'bg-white border-gray-200/80'} border rounded-[28px] p-7 shadow-sm android-card-transition flex flex-col justify-between`}>
+                    <div>
+                      <h3 className="text-[17px] font-bold mb-4 flex items-center gap-2.5">
+                        <span className="text-[#af2024]">{IconOutlined.calendar}</span> AI Recommended Meetings & Site Visits
+                      </h3>
+
+                      <div className="flex flex-col gap-3">
+                        <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} flex items-center justify-between gap-3 shadow-xs`}>
+                          <div>
+                            <div className="font-bold text-[14px]">Site Visit: SH-12 Ring Road Sub-base Inspection</div>
+                            <div className="text-[12px] text-gray-400 font-medium mt-0.5">Today @ 3:30 PM • AI Telemetry Recommendation</div>
+                          </div>
+                          <button 
+                            onClick={() => triggerToast("✓ Accepted SH-12 Site Visit invitation")}
+                            className="px-4 py-2 bg-white dark:bg-[#333] border border-gray-200 dark:border-white/10 rounded-xl text-[13px] font-bold hover:bg-gray-100 transition cursor-pointer shrink-0"
+                          >
+                            Accept
+                          </button>
+                        </div>
+
+                        <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-[#222] border-white/5' : 'bg-gray-50 border-gray-200/80'} flex items-center justify-between gap-3 shadow-xs`}>
+                          <div>
+                            <div className="font-bold text-[14px]">Meeting: Vendor Payment Review with CFO</div>
+                            <div className="text-[12px] text-gray-400 font-medium mt-0.5">Tomorrow @ 10:00 AM • High Priority</div>
+                          </div>
+                          <button 
+                            onClick={() => triggerToast("📅 Scheduled Vendor Payment Review meeting")}
+                            className="px-4 py-2 bg-white dark:bg-[#333] border border-gray-200 dark:border-white/10 rounded-xl text-[13px] font-bold hover:bg-gray-100 transition cursor-pointer shrink-0"
+                          >
+                            Schedule
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 text-[12.5px] text-gray-400 text-center font-medium">
+                      🤖 AI continuously synchronizes with Director’s calendar & site telemetry.
+                    </div>
                   </div>
                 </div>
 
