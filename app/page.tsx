@@ -2029,7 +2029,7 @@ export default function DirectorDashboard() {
                     <div>
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-[16px] font-bold flex items-center gap-2">
-                          <span className="text-[#af2024]">{IconOutlined.map}</span> Trip Planner & AI Route ({currentTripIndex + 1}/{futureTrips.length})
+                          <span className="text-[#af2024]">{IconOutlined.mapPin}</span> Trip Planner & AI Route ({currentTripIndex + 1}/{futureTrips.length})
                         </h3>
                         <div className="flex gap-1.5">
                           <button onClick={() => setCurrentTripIndex((prev) => (prev === 0 ? futureTrips.length - 1 : prev - 1))} className="w-7 h-7 rounded-full glass-button flex items-center justify-center font-bold text-xs cursor-pointer text-slate-900">‹</button>
